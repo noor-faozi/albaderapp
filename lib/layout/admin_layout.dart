@@ -3,6 +3,7 @@ import 'package:albaderapp/screens/admin/employees.dart';
 import 'package:albaderapp/screens/admin/holidays.dart';
 import 'package:albaderapp/screens/admin/overtime_attendance.dart';
 import 'package:albaderapp/screens/admin/reports.dart';
+import 'package:albaderapp/theme/colors.dart';
 import 'package:flutter/material.dart';
 
 class AdminLayout extends StatefulWidget {
@@ -31,17 +32,41 @@ class _AdminLayoutState extends State<AdminLayout> {
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
         type: BottomNavigationBarType.fixed,
-        items: const [
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: gray500,
+        items: [
           BottomNavigationBarItem(
-              icon: Icon(Icons.groups), label: 'Employees'),
+            icon: Icon(
+              _selectedIndex == 0 ? Icons.groups : Icons.groups_outlined,
+            ),
+            label: 'Employees',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.punch_clock), label: 'Attendance'),
+            icon: Icon(
+              _selectedIndex == 1
+                  ? Icons.punch_clock
+                  : Icons.punch_clock_outlined,
+            ),
+            label: 'Attendance',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.more_time), label: 'Overtime'),
+            icon: Icon(
+              _selectedIndex == 2 ? Icons.more_time : Icons.more_time_outlined,
+            ),
+            label: 'Overtime',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.event), label: 'Holiday'),
+            icon: Icon(
+              _selectedIndex == 3 ? Icons.event : Icons.event_outlined,
+            ),
+            label: 'Holiday',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.analytics), label: 'Reports'),
+            icon: Icon(
+              _selectedIndex == 4 ? Icons.analytics : Icons.analytics_outlined,
+            ),
+            label: 'Reports',
+          ),
         ],
       ),
     );
