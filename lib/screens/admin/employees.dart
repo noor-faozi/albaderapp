@@ -10,6 +10,6 @@ class Employees extends StatefulWidget {
 class _EmployeesState extends State<Employees> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return const Center(child: Text('Admin employees'));
   }
 }

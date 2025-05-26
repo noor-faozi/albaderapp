@@ -10,6 +10,6 @@ class Holidays extends StatefulWidget {
 class _HolidaysState extends State<Holidays> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return const Center(child: Text('Admin holidays'));
   }
 }

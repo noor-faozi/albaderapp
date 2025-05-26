@@ -36,7 +36,6 @@ class _AdminLayoutState extends State<AdminLayout> {
               icon: Icon(Icons.groups), label: 'Employees'),
           BottomNavigationBarItem(
               icon: Icon(Icons.punch_clock), label: 'Attendance'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Users'),
           BottomNavigationBarItem(
               icon: Icon(Icons.more_time), label: 'Overtime'),
           BottomNavigationBarItem(

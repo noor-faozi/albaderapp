@@ -10,6 +10,6 @@ class OvertimeAttendance extends StatefulWidget {
 class _OvertimeAttendanceState extends State<OvertimeAttendance> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return const Center(child: Text('Admin overtime'));
   }
 }
