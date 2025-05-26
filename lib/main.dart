@@ -1,4 +1,5 @@
 import 'package:albaderapp/layout/admin_layout.dart';
+import 'package:albaderapp/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -21,9 +22,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'AL BADER APP',
-      theme: ThemeData(
-        useMaterial3: true,
-      ),
+      theme: appTheme,
       debugShowCheckedModeBanner: false,
       home: const AdminLayout(),
     );
