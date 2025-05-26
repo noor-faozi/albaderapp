@@ -1,3 +1,5 @@
+import 'package:albaderapp/layout/admin_layout.dart';
+import 'package:albaderapp/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -19,76 +21,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      title: 'AL BADER APP',
+      theme: appTheme,
       debugShowCheckedModeBanner: false,
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const AdminLayout(),
     );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  final _notesStream =
-      Supabase.instance.client.from('notes').stream(primaryKey: ['id']);
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: Text(widget.title),
-        ),
-        body: StreamBuilder<List<Map<String, dynamic>>>(
-          stream: _notesStream,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
-            final notes = snapshot.data!;
-
-            return ListView.builder(
-                itemCount: notes.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(notes[index]['body']),
-                  );
-                });
-          },
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            showDialog(
-                context: context,
-                builder: ((context) {
-                  return SimpleDialog(
-                    title: const Text('Add a note'),
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16.0),
-                    children: [
-                      TextFormField(
-                        onFieldSubmitted: (value) async {
-                          await Supabase.instance.client
-                              .from('notes')
-                              .insert({'body': value});
-                        },
-                      )
-                    ],
-                  );
-                }));
-          },
-          child: const Icon(Icons.add),
-        ));
   }
 }
