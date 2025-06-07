@@ -1,3 +1,4 @@
+import 'package:albaderapp/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 
 class Employees extends StatefulWidget {
@@ -10,6 +11,9 @@ class Employees extends StatefulWidget {
 class _EmployeesState extends State<Employees> {
   @override
   Widget build(BuildContext context) {
-    return const Center(child: Text('Admin employees'));
+    return const Scaffold(
+        appBar: CustomAppBar(
+      title: "Employees Attendance",
+    ));
   }
 }
