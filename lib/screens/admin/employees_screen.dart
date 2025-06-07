@@ -1,4 +1,5 @@
 import 'package:albaderapp/screens/admin/add_employee_screen.dart';
+import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -191,16 +192,22 @@ class _EmployeesDataTableWidgetState extends State<EmployeesDataTableWidget> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      child: PaginatedDataTable(
-        header: const Text('Employees'),
-        rowsPerPage: 10,
-        columns: const [
-          DataColumn(label: Text('ID')),
-          DataColumn(label: Text('Name')),
-          DataColumn(label: Text('Profession')),
-          DataColumn(label: Text('Action')), // Added column
-        ],
-        source: _data,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+        horizontal: screenWidth(context, 0.04),
+        vertical: screenHeight(context, 0.02),
+      ),
+        child: PaginatedDataTable(
+          header: const Text('Employees'),
+          rowsPerPage: 7,
+          columns: const [
+            DataColumn(label: Text('ID')),
+            DataColumn(label: Text('Name')),
+            DataColumn(label: Text('Profession')),
+            DataColumn(label: Text('Action')), // Added column
+          ],
+          source: _data,
+        ),
       ),
     );
   }
