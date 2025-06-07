@@ -4,6 +4,7 @@ import 'package:albaderapp/widgets/csutom_text_form_field.dart';
 import 'package:albaderapp/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:albaderapp/utils/responsive.dart';
 
 class AddEmployeeScreen extends StatefulWidget {
   const AddEmployeeScreen({super.key});
@@ -90,6 +91,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                   onChanged: _checkEmployeeIdUnique,
                   prefixIcon: const Icon(Icons.badge_rounded),
                 ),
+                SizedBox(height: screenHeight(context, 0.015)),
                 CustomTextFormField(
                   controller: _nameController,
                   labelText: "Full Name",
@@ -97,6 +99,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                       value == null || value.isEmpty ? "Enter name" : null,
                   prefixIcon: const Icon(Icons.person_rounded),
                 ),
+                SizedBox(height: screenHeight(context, 0.015)),
                 CustomTextFormField(
                   controller: _professionController,
                   labelText: "Profession",
@@ -105,7 +108,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                       : null,
                   prefixIcon: const Icon(Icons.business_center_rounded),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: screenHeight(context, 0.015)),
                 CustomTextFormField(
                   controller: _usernameController,
                   labelText: "Username",
@@ -121,7 +124,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                   },
                   prefixIcon: const Icon(Icons.person_outline_rounded),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: screenHeight(context, 0.015)),
                 CustomTextFormField(
                   controller: _passwordController,
                   labelText: 'Password',
@@ -135,7 +138,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: screenHeight(context, 0.025)),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleCreateEmployee,
                   child: const Text("Create Employee"),
