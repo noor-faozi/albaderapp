@@ -1,4 +1,5 @@
 import 'package:albaderapp/screens/admin/add_employee_screen.dart';
+import 'package:albaderapp/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -29,7 +30,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
         });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Employees')),
+      appBar: const CustomAppBar(title: 'Employees'),
       body: Column(
         children: [
           Padding(
