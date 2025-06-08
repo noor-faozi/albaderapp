@@ -86,7 +86,15 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
             key: _formKey,
             child: Column(
               children: [
-                const Text("Add New Employee", style: TextStyle(fontSize: 20)),
+                Padding(
+                  padding: EdgeInsets.all(
+                      screenPadding(context, 0.05)),
+                  child: const Text(
+                    "Add New Employee",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                ),
+
                 CustomTextFormField(
                   controller: _employeeIdController,
                   labelText: "Employee ID (3 digits)",
@@ -107,7 +115,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                       value == null || value.isEmpty ? "Enter name" : null,
                   prefixIcon: const Icon(Icons.person_rounded),
                 ),
-                SizedBox(height: screenHeight(context, 0.015)),
+                SizedBox(height: screenHeight(context, 0.025)),
                 CustomTextFormField(
                   controller: _usernameController,
                   labelText: "Username",
@@ -123,7 +131,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                   },
                   prefixIcon: const Icon(Icons.person_outline_rounded),
                 ),
-                SizedBox(height: screenHeight(context, 0.015)),
+                SizedBox(height: screenHeight(context, 0.025)),
                 CustomTextFormField(
                   controller: _passwordController,
                   labelText: 'Password',
@@ -137,7 +145,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                     return null;
                   },
                 ),
-                SizedBox(height: screenHeight(context, 0.015)),
+                SizedBox(height: screenHeight(context, 0.025)),
                 CustomTextFormField(
                   controller: _professionController,
                   labelText: "Profession",
@@ -146,7 +154,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                       : null,
                   prefixIcon: const Icon(Icons.business_center_rounded),
                 ),
-                SizedBox(height: screenHeight(context, 0.015)),
+                SizedBox(height: screenHeight(context, 0.025)),
                 CustomTextFormField(
                   controller: _salaryController,
                   labelText: "Salary (AED)",
@@ -161,7 +169,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                       value == null || value.isEmpty ? "Enter Salary" : null,
                   prefixIcon: const Icon(Icons.payments_rounded),
                 ),
-                SizedBox(height: screenHeight(context, 0.015)),
+                SizedBox(height: screenHeight(context, 0.025)),
                 CustomTextFormField(
                   controller: _allowanceController,
                   labelText: "Allowance (AED)",
@@ -176,7 +184,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                       value == null || value.isEmpty ? "Enter Allowance" : null,
                   prefixIcon: const Icon(Icons.payments_outlined),
                 ),
-                SizedBox(height: screenHeight(context, 0.025)),
+                SizedBox(height: screenHeight(context, 0.035)),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleCreateEmployee,
                   child: const Text("Create Employee"),
