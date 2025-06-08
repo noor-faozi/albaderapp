@@ -1,5 +1,6 @@
 import 'package:albaderapp/theme/colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomTextFormField extends StatefulWidget {
   final TextEditingController controller;
@@ -11,6 +12,7 @@ class CustomTextFormField extends StatefulWidget {
   final Widget? suffixIcon;
   final void Function(String)? onChanged;
   final int? maxLength;
+  final List<TextInputFormatter>? inputFormatters;
 
   const CustomTextFormField({
     super.key,
@@ -23,6 +25,7 @@ class CustomTextFormField extends StatefulWidget {
     this.suffixIcon,
     this.onChanged,
     this.maxLength,
+    this.inputFormatters
   });
 
   @override
@@ -60,6 +63,7 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
       validator: widget.validator,
       onChanged: widget.onChanged,
       maxLength: widget.maxLength,
+      inputFormatters: widget.inputFormatters,
       decoration: InputDecoration(
         labelText: widget.labelText,
         border: OutlineInputBorder(

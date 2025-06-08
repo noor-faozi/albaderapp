@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:albaderapp/widgets/csutom_text_form_field.dart';
 import 'package:albaderapp/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:albaderapp/utils/responsive.dart';
 
@@ -20,6 +21,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   final _professionController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _salaryController = TextEditingController();
+  final _allowanceController = TextEditingController();
 
   bool _isLoading = false;
   String? _generatedUsername;
@@ -67,6 +70,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     _professionController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
+    _salaryController.dispose();
+    _allowanceController.dispose();
     super.dispose();
   }
 
@@ -89,6 +94,9 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                   maxLength: 3,
                   validator: _validateEmployeeId,
                   onChanged: _checkEmployeeIdUnique,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly
+                  ],
                   prefixIcon: const Icon(Icons.badge_rounded),
                 ),
                 SizedBox(height: screenHeight(context, 0.015)),
@@ -98,15 +106,6 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                   validator: (value) =>
                       value == null || value.isEmpty ? "Enter name" : null,
                   prefixIcon: const Icon(Icons.person_rounded),
-                ),
-                SizedBox(height: screenHeight(context, 0.015)),
-                CustomTextFormField(
-                  controller: _professionController,
-                  labelText: "Profession",
-                  validator: (value) => value == null || value.isEmpty
-                      ? "Enter Profession"
-                      : null,
-                  prefixIcon: const Icon(Icons.business_center_rounded),
                 ),
                 SizedBox(height: screenHeight(context, 0.015)),
                 CustomTextFormField(
@@ -138,6 +137,45 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                     return null;
                   },
                 ),
+                SizedBox(height: screenHeight(context, 0.015)),
+                CustomTextFormField(
+                  controller: _professionController,
+                  labelText: "Profession",
+                  validator: (value) => value == null || value.isEmpty
+                      ? "Enter Profession"
+                      : null,
+                  prefixIcon: const Icon(Icons.business_center_rounded),
+                ),
+                SizedBox(height: screenHeight(context, 0.015)),
+                CustomTextFormField(
+                  controller: _salaryController,
+                  labelText: "Salary (AED)",
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                      RegExp(r'^\d+\.?\d{0,2}$|^\d*\.?$'),
+                    ),
+                  ],
+                  validator: (value) =>
+                      value == null || value.isEmpty ? "Enter Salary" : null,
+                  prefixIcon: const Icon(Icons.payments_rounded),
+                ),
+                SizedBox(height: screenHeight(context, 0.015)),
+                CustomTextFormField(
+                  controller: _allowanceController,
+                  labelText: "Allowance (AED)",
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                      RegExp(r'^\d+\.?\d{0,2}$|^\d*\.?$'),
+                    ),
+                  ],
+                  validator: (value) =>
+                      value == null || value.isEmpty ? "Enter Allowance" : null,
+                  prefixIcon: const Icon(Icons.payments_outlined),
+                ),
                 SizedBox(height: screenHeight(context, 0.025)),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleCreateEmployee,
@@ -167,6 +205,11 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     final username = _usernameController.text.trim().toLowerCase();
     final email = _generateEmail(username);
     final password = _passwordController.text;
+    final salaryText = _salaryController.text.trim();
+    final allowanceText = _allowanceController.text.trim();
+
+    final double? salary = double.tryParse(salaryText);
+    final double? allowance = double.tryParse(allowanceText);
 
     try {
       final authRes =
@@ -185,7 +228,9 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         'id': employeeId,
         'user_id': userId,
         'name': name,
-        'profession': profession.isNotEmpty ? profession : null,
+        'profession': profession,
+        'salary': salary,
+        'allowance': allowance
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -198,6 +243,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
       _professionController.clear();
       _usernameController.clear();
       _passwordController.clear();
+      _salaryController.clear();
+      _allowanceController.clear();
     } catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
