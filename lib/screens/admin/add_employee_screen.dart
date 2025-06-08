@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:albaderapp/widgets/csutom_text_form_field.dart';
-import 'package:albaderapp/widgets/custom_app_bar.dart';
+import 'package:albaderapp/widgets/custom_text_form_field.dart';
+import 'package:albaderapp/widgets/custom_secondary_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -78,7 +78,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(title: "Add Employee"),
+      appBar: const CustomSecondaryAppBar(title: "Add Employee"),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),
