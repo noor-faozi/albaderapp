@@ -1,4 +1,5 @@
 import 'package:albaderapp/screens/admin/add_employee_screen.dart';
+import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
@@ -16,8 +17,6 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
 
   String searchQuery = '';
 
-  // Pagination params
-  static const int rowsPerPage = 10;
 
   @override
   Widget build(BuildContext context) {
@@ -125,11 +124,11 @@ class EmployeesDataTable extends DataTableSource {
       DataCell(Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.edit, color: Colors.blue),
+            icon: const Icon(Icons.edit_rounded, color: gray500),
             onPressed: () => onEdit(emp),
           ),
           IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
+            icon: const Icon(Icons.delete_rounded, color: gray500),
             onPressed: () => onDelete(emp),
           ),
         ],

@@ -51,18 +51,6 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
 
   @override
   Widget build(BuildContext context) {
-    final suffixIcon = widget.isPassword
-        ? IconButton(
-            icon: Icon(
-              _showPassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-            ),
-            onPressed: () {
-              setState(() {
-                _showPassword = !_showPassword;
-              });
-            },
-          )
-        : widget.suffixIcon;
 
     return TextFormField(
       controller: widget.controller,
@@ -79,8 +67,8 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: gray500!,
+          borderSide: const BorderSide(
+            color: gray500,
             width: 1.2,
           ),
         ),
