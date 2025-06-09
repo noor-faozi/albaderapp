@@ -1,5 +1,6 @@
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
+import 'package:albaderapp/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -127,237 +128,241 @@ class _AttendanceFormState extends State<AttendanceForm> {
       padding: EdgeInsets.all(screenPadding(context, 0.06)),
       child: Form(
         key: _formKey,
-        child: Column(
-          children: [
-            FormField<DateTime>(
-              validator: (value) {
-                if (_selectedDate.isAfter(DateTime.now())) {
-                  return 'Date cannot be in the future';
-                }
-                return null;
-              },
-              builder: (field) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Date:',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        TextButton.icon(
-                          onPressed: () async {
-                            final date = await showDatePicker(
-                              context: context,
-                              initialDate: _selectedDate,
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime(2100),
-                            );
-                            if (date != null) {
-                              setState(() {
-                                _selectedDate = date;
-                                field.didChange(date); // update form state
-                              });
-                            }
-                          },
-                          icon: const Icon(Icons.calendar_today),
-                          label: Text(
-                            _selectedDate.toLocal().toString().split(' ')[0],
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (field.hasError)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4.0, top: 4.0),
-                        child: Text(
-                          field.errorText!,
-                          style:
-                              const TextStyle(color: darkRed, fontSize: 12),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
-            SizedBox(height: screenHeight(context, 0.025)),
-
-           Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _employeeIdController,
-                    decoration: InputDecoration(
-                      labelText: 'Employee Code',
-                      border: const OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(
-                        vertical: verticalPadding,
-                        horizontal: screenPadding(context, 0.025),
-                      ),
-                    ),
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'Enter employee code'
-                        : null,
-                  ),
-                ),
-                SizedBox(width: screenPadding(context, 0.02)),
-                SizedBox(
-                  height: buttonHeight,
-                  child: ElevatedButton(
-                    onPressed: _fetchEmployee,
-                    child: const Text('Search'),
-                  ),
-                ),
-              ],
-            ),
-
-
-            if (_employee != null) ...[
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: screenPadding(context, 0.05)),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 4,
-                    child: Padding(
-                      padding: EdgeInsets.all(screenPadding(context, 0.04)),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              FormField<DateTime>(
+                validator: (value) {
+                  if (_selectedDate.isAfter(DateTime.now())) {
+                    return 'Date cannot be in the future';
+                  }
+                  return null;
+                },
+                builder: (field) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            "Employee Details",
-                            style:
-                                Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                          const Text(
+                            'Date:',
+                            style: TextStyle(fontSize: 16),
                           ),
-                          const SizedBox(height: 8),
-                          Text("Name: ${_employee!['name']}"),
-                          Text("Profession: ${_employee!['profession']}"),
+                          TextButton.icon(
+                            onPressed: () async {
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate: _selectedDate,
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime(2100),
+                              );
+                              if (date != null) {
+                                setState(() {
+                                  _selectedDate = date;
+                                  field.didChange(date); // update form state
+                                });
+                              }
+                            },
+                            icon: const Icon(Icons.calendar_today),
+                            label: Text(
+                              _selectedDate.toLocal().toString().split(' ')[0],
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
                         ],
                       ),
+                      if (field.hasError)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4.0, top: 4.0),
+                          child: Text(
+                            field.errorText!,
+                            style:
+                                const TextStyle(color: darkRed, fontSize: 12),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+              SizedBox(height: screenHeight(context, 0.025)),
+          
+             Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _employeeIdController,
+                      decoration: InputDecoration(
+                        labelText: 'Employee Code',
+                        border: const OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          vertical: verticalPadding,
+                          horizontal: screenPadding(context, 0.025),
+                        ),
+                      ),
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Enter employee code'
+                          : null,
+                    ),
+                  ),
+                  SizedBox(width: screenPadding(context, 0.02)),
+                  SizedBox(
+                    height: buttonHeight,
+                    child: CustomButton(
+                      label: 'Search',
+                      onPressed: _fetchEmployee,
+                    ),
+                  ),
+                ],
+              ),
+          
+          
+              if (_employee != null) ...[
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: screenPadding(context, 0.05)),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 4,
+                      child: Padding(
+                        padding: EdgeInsets.all(screenPadding(context, 0.04)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Employee Details",
+                              style:
+                                  Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text("Name: ${_employee!['name']}"),
+                            Text("Profession: ${_employee!['profession']}"),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ] else if (_employeeNotFound) ...[
-              Padding(
-                padding: EdgeInsets.all(screenPadding(context, 0.05)),
-                child: const Text(
-                  'No employee found with this code.',
-                  style:
-                      TextStyle(color: red, fontWeight: FontWeight.bold),
+              ] else if (_employeeNotFound) ...[
+                Padding(
+                  padding: EdgeInsets.all(screenPadding(context, 0.05)),
+                  child: const Text(
+                    'No employee found with this code.',
+                    style:
+                        TextStyle(color: red, fontWeight: FontWeight.bold),
+                  ),
                 ),
+              ],
+          
+          
+              SizedBox(height: screenHeight(context, 0.025)),
+          
+              // DropdownButtonFormField(
+              //   items: _woOptions
+              //       .map<DropdownMenuItem<String>>((wo) => DropdownMenuItem(
+              //             value: wo['id'],
+              //             child: Text(wo['title']),
+              //           ))
+              //       .toList(),
+              //   onChanged: (value) => _selectedWoId = value,
+              //   decoration: const InputDecoration(labelText: 'Work Order'),
+              //   validator: (value) => value == null ? 'Select a WO' : null,
+              // ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Clock in Time:',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  TextButton.icon(
+                    onPressed: () async {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: _inTime ?? TimeOfDay.now(),
+                      );
+                      if (time != null) setState(() => _inTime = time);
+                    },
+                    icon: const Icon(Icons.access_time),
+                    label: Text(
+                      _inTime == null ? 'Select Time' : _inTime!.format(context),
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ],
+              ),
+          
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Clock out Time:',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  TextButton.icon(
+                    onPressed: () async {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: _outTime ?? TimeOfDay.now(),
+                      );
+                      if (time != null) setState(() => _outTime = time);
+                    },
+                    icon: const Icon(Icons.access_time),
+                    label: Text(
+                      _outTime == null
+                          ? 'Select Time'
+                          : _outTime!.format(context),
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ],
+              ),
+          
+              Row(
+                children: [
+                  const Text(
+                    'Total Hours:',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    width: screenWidth(context, 0.25),
+                    child: TextFormField(
+                      readOnly: true,
+                      enabled: false,
+                      controller: TextEditingController(
+                        text: _totalHours != null
+                            ? formatHoursToHM(_totalHours!)
+                            : '',
+                      ),
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+          
+              const SizedBox(height: 12),
+          
+              const SizedBox(height: 12),
+          
+              CustomButton(
+                label: 'Submit Attendance',
+                onPressed: _submitForm,
+                widthFactor: 0.5,
+                heightFactor: 0.1,
               ),
             ],
-
-
-            SizedBox(height: screenHeight(context, 0.025)),
-
-            // DropdownButtonFormField(
-            //   items: _woOptions
-            //       .map<DropdownMenuItem<String>>((wo) => DropdownMenuItem(
-            //             value: wo['id'],
-            //             child: Text(wo['title']),
-            //           ))
-            //       .toList(),
-            //   onChanged: (value) => _selectedWoId = value,
-            //   decoration: const InputDecoration(labelText: 'Work Order'),
-            //   validator: (value) => value == null ? 'Select a WO' : null,
-            // ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Clock in Time:',
-                  style: TextStyle(fontSize: 16),
-                ),
-                TextButton.icon(
-                  onPressed: () async {
-                    final time = await showTimePicker(
-                      context: context,
-                      initialTime: _inTime ?? TimeOfDay.now(),
-                    );
-                    if (time != null) setState(() => _inTime = time);
-                  },
-                  icon: const Icon(Icons.access_time),
-                  label: Text(
-                    _inTime == null ? 'Select Time' : _inTime!.format(context),
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-              ],
-            ),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Clock out Time:',
-                  style: TextStyle(fontSize: 16),
-                ),
-                TextButton.icon(
-                  onPressed: () async {
-                    final time = await showTimePicker(
-                      context: context,
-                      initialTime: _outTime ?? TimeOfDay.now(),
-                    );
-                    if (time != null) setState(() => _outTime = time);
-                  },
-                  icon: const Icon(Icons.access_time),
-                  label: Text(
-                    _outTime == null
-                        ? 'Select Time'
-                        : _outTime!.format(context),
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-              ],
-            ),
-
-            Row(
-              children: [
-                const Text(
-                  'Total Hours:',
-                  style: TextStyle(fontSize: 16),
-                ),
-                const Spacer(),
-                SizedBox(
-                  width: screenWidth(context, 0.25),
-                  child: TextFormField(
-                    readOnly: true,
-                    enabled: false,
-                    controller: TextEditingController(
-                      text: _totalHours != null
-                          ? formatHoursToHM(_totalHours!)
-                          : '',
-                    ),
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            const SizedBox(height: 12),
-
-            ElevatedButton(
-              onPressed: _submitForm,
-              child: const Text("Submit Attendance"),
-            ),
-          ],
+          ),
         ),
       ),
     );
