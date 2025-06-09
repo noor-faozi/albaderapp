@@ -1,6 +1,7 @@
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/widgets/custom_button.dart';
+import 'package:albaderapp/widgets/search_and_display_card.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -64,7 +65,6 @@ class _AttendanceFormState extends State<AttendanceForm> {
       _workOrderNotFound = result == null;
     });
   }
-
 
   // Future<void> _loadWorkOrders() async {
   //   final result = await supabase.from('work_orders').select();
@@ -198,156 +198,68 @@ class _AttendanceFormState extends State<AttendanceForm> {
                   );
                 },
               ),
+
               SizedBox(height: screenHeight(context, 0.025)),
-          
-             Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _employeeIdController,
-                      decoration: InputDecoration(
-                        labelText: 'Employee Code',
-                        border: const OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(
-                          vertical: verticalPadding,
-                          horizontal: screenPadding(context, 0.025),
-                        ),
-                      ),
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Enter employee code'
-                          : null,
+
+              // Employee:
+              SearchAndDisplayCard<Map<String, dynamic>>(
+                controller: _employeeIdController,
+                exactDigits: 3,
+                label: 'Employee Code',
+                onSearch: _fetchEmployee,
+                data: _employee,
+                notFound: _employeeNotFound,
+                verticalPadding: verticalPadding,
+                horizontalPadding: screenPadding(context, 0.04),
+                buttonHeight: buttonHeight,
+                detailsBuilder: (employee) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Employee Details",
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
-                  ),
-                  SizedBox(width: screenPadding(context, 0.02)),
-                  SizedBox(
-                    height: buttonHeight,
-                    child: CustomButton(
-                      label: 'Search',
-                      onPressed: _fetchEmployee,
-                    ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text("Employee Code: ${employee['id']}"),
+                    Text("Name: ${employee['name']}"),
+                    Text("Profession: ${employee['profession']}"),
+                  ],
+                ),
               ),
-          
-          
-              if (_employee != null) ...[
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: screenPadding(context, 0.05)),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 4,
-                      child: Padding(
-                        padding: EdgeInsets.all(screenPadding(context, 0.04)),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Employee Details",
-                              style:
-                                  Theme.of(context).textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text("Name: ${_employee!['name']}"),
-                            Text("Profession: ${_employee!['profession']}"),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ] else if (_employeeNotFound) ...[
-                Padding(
-                  padding: EdgeInsets.all(screenPadding(context, 0.05)),
-                  child: const Text(
-                    'No employee found with this code.',
-                    style:
-                        TextStyle(color: red, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
+
               SizedBox(height: screenHeight(context, 0.025)),
-          
-             Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _workOrderIdController,
-                      decoration: InputDecoration(
-                        labelText: 'Work Order Code',
-                        border: const OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(
-                          vertical: verticalPadding,
-                          horizontal: screenPadding(context, 0.025),
-                        ),
-                      ),
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Enter work order code'
-                          : null,
+
+              // Work Order:
+              SearchAndDisplayCard<Map<String, dynamic>>(
+                controller: _workOrderIdController,
+                label: 'Work Order Code',
+                exactDigits: 10,
+                onSearch: _fetchWorkOrder,
+                data: _workOrder,
+                notFound: _workOrderNotFound,
+                verticalPadding: verticalPadding,
+                horizontalPadding: screenPadding(context, 0.04),
+                buttonHeight: buttonHeight,
+                detailsBuilder: (workOrder) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Work Order Details",
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
-                  ),
-                  SizedBox(width: screenPadding(context, 0.02)),
-                  SizedBox(
-                    height: buttonHeight,
-                    child: CustomButton(
-                      label: 'Search',
-                      onPressed: _fetchWorkOrder,
-                    ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text("Work Order Code: ${workOrder['id']}"),
+                    Text("Description: ${workOrder['description']}"),
+                  ],
+                ),
               ),
-          
-          
-              if (_workOrder != null) ...[
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: screenPadding(context, 0.05)),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 4,
-                      child: Padding(
-                        padding: EdgeInsets.all(screenPadding(context, 0.04)),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Work Order Details",
-                              style:
-                                  Theme.of(context).textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text("Work Order Code: ${_workOrder!['id']}"),
-                            Text("description: ${_workOrder!['description']}"),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ] else if (_workOrderNotFound) ...[
-                Padding(
-                  padding: EdgeInsets.all(screenPadding(context, 0.05)),
-                  child: const Text(
-                    'No work order found with this code.',
-                    style:
-                        TextStyle(color: red, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-          
-          
+
               SizedBox(height: screenHeight(context, 0.025)),
-          
+
               // DropdownButtonFormField(
               //   items: _woOptions
               //       .map<DropdownMenuItem<String>>((wo) => DropdownMenuItem(
@@ -376,13 +288,15 @@ class _AttendanceFormState extends State<AttendanceForm> {
                     },
                     icon: const Icon(Icons.access_time),
                     label: Text(
-                      _inTime == null ? 'Select Time' : _inTime!.format(context),
+                      _inTime == null
+                          ? 'Select Time'
+                          : _inTime!.format(context),
                       style: const TextStyle(fontSize: 16),
                     ),
                   ),
                 ],
               ),
-          
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -408,7 +322,7 @@ class _AttendanceFormState extends State<AttendanceForm> {
                   ),
                 ],
               ),
-          
+
               Row(
                 children: [
                   const Text(
@@ -436,11 +350,11 @@ class _AttendanceFormState extends State<AttendanceForm> {
                   ),
                 ],
               ),
-          
+
               const SizedBox(height: 12),
-          
+
               const SizedBox(height: 12),
-          
+
               CustomButton(
                 label: 'Submit Attendance',
                 onPressed: _submitForm,
