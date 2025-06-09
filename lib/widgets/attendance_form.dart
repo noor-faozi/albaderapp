@@ -22,10 +22,12 @@ class _AttendanceFormState extends State<AttendanceForm> {
   final _formKey = GlobalKey<FormState>();
   final supabase = Supabase.instance.client;
   final _employeeIdController = TextEditingController();
+  final _workOrderIdController = TextEditingController();
   final _inTimeController = TextEditingController();
   final _outTimeController = TextEditingController();
 
   Map<String, dynamic>? _employee;
+  Map<String, dynamic>? _workOrder;
   DateTime _selectedDate = DateTime.now();
   TimeOfDay? _inTime;
   TimeOfDay? _outTime;
@@ -33,6 +35,7 @@ class _AttendanceFormState extends State<AttendanceForm> {
   String? _selectedWoId;
   String? _dateError;
   bool _employeeNotFound = false;
+  bool _workOrderNotFound = false;
 
   double? get _totalHours {
     if (_inTime == null || _outTime == null) return null;
@@ -49,6 +52,16 @@ class _AttendanceFormState extends State<AttendanceForm> {
     setState(() {
       _employee = result;
       _employeeNotFound = result == null;
+    });
+  }
+
+  Future<void> _fetchWorkOrder() async {
+    final id = _workOrderIdController.text.trim();
+    final result =
+        await supabase.from('work_orders').select().eq('id', id).maybeSingle();
+    setState(() {
+      _workOrder = result;
+      _workOrderNotFound = result == null;
     });
   }
 
@@ -98,7 +111,7 @@ class _AttendanceFormState extends State<AttendanceForm> {
     final data = {
       'employee_id': _employee!['id'],
       'date': _selectedDate.toIso8601String(),
-      // 'wo_id': _selectedWoId,
+      'wo_id': _workOrder!['id'],
       'in_time': '${_inTime!.hour}:${_inTime!.minute}',
       'out_time': '${_outTime!.hour}:${_outTime!.minute}',
       'total_hours': _totalHours,
@@ -253,6 +266,79 @@ class _AttendanceFormState extends State<AttendanceForm> {
                   padding: EdgeInsets.all(screenPadding(context, 0.05)),
                   child: const Text(
                     'No employee found with this code.',
+                    style:
+                        TextStyle(color: red, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+              SizedBox(height: screenHeight(context, 0.025)),
+          
+             Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _workOrderIdController,
+                      decoration: InputDecoration(
+                        labelText: 'Work Order Code',
+                        border: const OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          vertical: verticalPadding,
+                          horizontal: screenPadding(context, 0.025),
+                        ),
+                      ),
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Enter work order code'
+                          : null,
+                    ),
+                  ),
+                  SizedBox(width: screenPadding(context, 0.02)),
+                  SizedBox(
+                    height: buttonHeight,
+                    child: CustomButton(
+                      label: 'Search',
+                      onPressed: _fetchWorkOrder,
+                    ),
+                  ),
+                ],
+              ),
+          
+          
+              if (_workOrder != null) ...[
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: screenPadding(context, 0.05)),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 4,
+                      child: Padding(
+                        padding: EdgeInsets.all(screenPadding(context, 0.04)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Work Order Details",
+                              style:
+                                  Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text("Work Order Code: ${_workOrder!['id']}"),
+                            Text("description: ${_workOrder!['description']}"),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ] else if (_workOrderNotFound) ...[
+                Padding(
+                  padding: EdgeInsets.all(screenPadding(context, 0.05)),
+                  child: const Text(
+                    'No work order found with this code.',
                     style:
                         TextStyle(color: red, fontWeight: FontWeight.bold),
                   ),
