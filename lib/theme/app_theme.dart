@@ -4,8 +4,8 @@ import 'colors.dart';
 final ThemeData appTheme = ThemeData(
   scaffoldBackgroundColor: Colors.white,
   colorScheme: const ColorScheme.light(
-    primary: firstColor,
-    secondary: firstColorDark,
+    primary: firstColorLight,
+    secondary: firstColor,
     surface: Colors.white,
   ),
 );

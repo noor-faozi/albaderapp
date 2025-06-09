@@ -1,3 +1,5 @@
+import 'package:albaderapp/widgets/attendance_form.dart';
+import 'package:albaderapp/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 
 class AttendanceScreen extends StatefulWidget {
@@ -10,6 +12,10 @@ class AttendanceScreen extends StatefulWidget {
 class _AttendanceState extends State<AttendanceScreen> {
   @override
   Widget build(BuildContext context) {
-    return const Center(child: Text('Admin AttendanceScreen'));
+    return Scaffold(
+      appBar: const CustomAppBar(title: "Attendance Form"),
+        body: AttendanceForm(
+      onSubmitSuccess: () => Navigator.pop(context),
+    ));
   }
 }
