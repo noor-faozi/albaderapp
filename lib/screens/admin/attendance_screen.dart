@@ -15,7 +15,6 @@ class _AttendanceState extends State<AttendanceScreen> {
     return Scaffold(
       appBar: const CustomAppBar(title: "Attendance Form"),
         body: AttendanceForm(
-      onSubmitSuccess: () => Navigator.pop(context),
     ));
   }
 }

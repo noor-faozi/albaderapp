@@ -1,5 +1,6 @@
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
+import 'package:albaderapp/utils/time_utils.dart';
 import 'package:albaderapp/widgets/custom_button.dart';
 import 'package:albaderapp/widgets/search_and_display_card.dart';
 import 'package:flutter/material.dart';
@@ -32,19 +33,12 @@ class _AttendanceFormState extends State<AttendanceForm> {
   DateTime _selectedDate = DateTime.now();
   TimeOfDay? _inTime;
   TimeOfDay? _outTime;
-  // List<dynamic> _woOptions = [];
   String? _selectedWoId;
   String? _dateError;
   bool _employeeNotFound = false;
   bool _workOrderNotFound = false;
 
-  double? get _totalHours {
-    if (_inTime == null || _outTime == null) return null;
-    final inDateTime = DateTime(0, 0, 0, _inTime!.hour, _inTime!.minute);
-    final outDateTime = DateTime(0, 0, 0, _outTime!.hour, _outTime!.minute);
-    final diff = outDateTime.difference(inDateTime);
-    return diff.inMinutes / 60.0;
-  }
+  double? get _totalHours => TimeUtils.calculateTotalHours(_inTime, _outTime);
 
   Future<void> _fetchEmployee() async {
     final id = _employeeIdController.text.trim();
@@ -66,19 +60,14 @@ class _AttendanceFormState extends State<AttendanceForm> {
     });
   }
 
-  // Future<void> _loadWorkOrders() async {
-  //   final result = await supabase.from('work_orders').select();
-  //   setState(() => _woOptions = result);
-  // }
-
   @override
   void initState() {
     super.initState();
-    // _loadWorkOrders();
   }
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
+
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final selectedDateOnly = DateTime(
@@ -101,35 +90,49 @@ class _AttendanceFormState extends State<AttendanceForm> {
     if (_employee == null ||
         _inTime == null ||
         _outTime == null ||
-        _selectedWoId == null) {
+        _workOrder == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please complete all fields')),
       );
       return;
     }
 
+    final employeeId = _employee!['id'];
+    final formattedDate = _selectedDate.toIso8601String().split('T').first;
+
+    //Check for existing attendance for this employee on this date
+    final existing = await supabase
+        .from('attendance')
+        .select()
+        .eq('employee_id', employeeId)
+        .eq('date', formattedDate)
+        .maybeSingle();
+
+    if (existing != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text(
+                'Attendance already submitted for this employee on this date')),
+      );
+      return;
+    }
+
     final data = {
-      'employee_id': _employee!['id'],
-      'date': _selectedDate.toIso8601String(),
-      'wo_id': _workOrder!['id'],
-      'in_time': '${_inTime!.hour}:${_inTime!.minute}',
-      'out_time': '${_outTime!.hour}:${_outTime!.minute}',
+      'employee_id': employeeId,
+      'date': formattedDate,
+      'work_order_id': _workOrder!['id'],
+      'in_time':
+          '${_inTime!.hour.toString().padLeft(2, '0')}:${_inTime!.minute.toString().padLeft(2, '0')}',
+      'out_time':
+          '${_outTime!.hour.toString().padLeft(2, '0')}:${_outTime!.minute.toString().padLeft(2, '0')}',
       'total_hours': _totalHours,
-      // 'created_by_role': widget.createdByRole,
     };
 
     await supabase.from('attendance').insert(data);
 
-    widget.onSubmitSuccess?.call();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Attendance submitted')),
     );
-  }
-
-  String formatHoursToHM(double hours) {
-    final int h = hours.floor();
-    final int m = ((hours - h) * 60).round();
-    return '$h:${m.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -260,17 +263,6 @@ class _AttendanceFormState extends State<AttendanceForm> {
 
               SizedBox(height: screenHeight(context, 0.025)),
 
-              // DropdownButtonFormField(
-              //   items: _woOptions
-              //       .map<DropdownMenuItem<String>>((wo) => DropdownMenuItem(
-              //             value: wo['id'],
-              //             child: Text(wo['title']),
-              //           ))
-              //       .toList(),
-              //   onChanged: (value) => _selectedWoId = value,
-              //   decoration: const InputDecoration(labelText: 'Work Order'),
-              //   validator: (value) => value == null ? 'Select a WO' : null,
-              // ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -337,7 +329,7 @@ class _AttendanceFormState extends State<AttendanceForm> {
                       enabled: false,
                       controller: TextEditingController(
                         text: _totalHours != null
-                            ? formatHoursToHM(_totalHours!)
+                            ? TimeUtils.formatHoursToHM(_totalHours!)
                             : '',
                       ),
                       decoration: const InputDecoration(
