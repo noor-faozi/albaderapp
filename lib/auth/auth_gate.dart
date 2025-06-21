@@ -10,28 +10,67 @@ class AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-        stream: Supabase.instance.client.auth.onAuthStateChange,
-        builder: (context, snapshot) {
-          // loading
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(
-                  color: firstColor,
+    return StreamBuilder<AuthState>(
+      stream: Supabase.instance.client.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        // While checking the auth state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(color: firstColor),
+            ),
+          );
+        }
+
+        // Get session
+        final session = snapshot.hasData ? snapshot.data!.session : null;
+
+        if (session == null) {
+          return const LoginScreen();
+        }
+
+        // Now fetch role using FutureBuilder
+        return FutureBuilder(
+          future: Supabase.instance.client
+              .from('profiles')
+              .select('role')
+              .eq('id', session.user.id)
+              .single(),
+          builder: (context, roleSnapshot) {
+            if (roleSnapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(
+                  child: CircularProgressIndicator(color: firstColor),
                 ),
-              ),
-            );
-          }
+              );
+            }
 
-          // check if there ia a valid session currently
-          final session = snapshot.hasData ? snapshot.data!.session : null;
+            if (roleSnapshot.hasError || !roleSnapshot.hasData) {
+              return const Scaffold(
+                body: Center(child: Text('Error loading user role')),
+              );
+            }
 
-          if (session != null) {
-            return AdminLayout();
-          } else {
-            return LoginScreen();
-          }
-        });
+            final role = roleSnapshot.data!['role'];
+
+            switch (role) {
+              case 'admin':
+                return const AdminLayout();
+              // case 'manager':
+              //   return ManagerLayout();
+              // case 'sv':
+              //   return SupervisorLayout();
+              // case 'employee':
+              //   return EmployeeLayout();
+              default:
+                return const Scaffold(
+                  body: Center(child: Text('Unknown role')),
+                );
+            }
+          },
+        );
+      },
+    );
   }
+
 }

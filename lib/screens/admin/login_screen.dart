@@ -18,16 +18,25 @@ class _LoginScreenState extends State<LoginScreen> {
   void login() async {
     final email = _emailController.text;
     final password = _passwordController.text;
-
     try {
-      await authService.signInWithEmailAndPassword(email, password);
+      final response =
+          await authService.signInWithEmailAndPassword(email, password);
+      if (response.session != null) {
+        print('Login successful');
+        // Optionally navigate or just wait for StreamBuilder to pick up auth state
+      } else {
+        throw Exception('Login failed: No session');
+      }
     } catch (e) {
+      print('Login error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Error: $e")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

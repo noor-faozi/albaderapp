@@ -1,4 +1,6 @@
+import 'package:albaderapp/auth/auth_gate.dart';
 import 'package:albaderapp/layouts/admin_layout.dart';
+import 'package:albaderapp/screens/admin/login_screen.dart';
 import 'package:albaderapp/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -24,7 +26,7 @@ class MyApp extends StatelessWidget {
       title: 'AL BADER APP',
       theme: appTheme,
       debugShowCheckedModeBanner: false,
-      home: const AdminLayout(),
+      home: const AuthGate(),
     );
   }
 }

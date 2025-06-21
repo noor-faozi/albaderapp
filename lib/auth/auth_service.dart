@@ -9,6 +9,7 @@ class AuthService {
     return await _supabase.auth
         .signInWithPassword(email: email, password: password);
   }
+  
 
   // Sign out
   Future<void> signOut() async {
