@@ -1,4 +1,6 @@
 import 'package:albaderapp/auth/auth_service.dart';
+import 'package:albaderapp/widgets/custom_button.dart';
+import 'package:albaderapp/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -36,17 +38,22 @@ class _LoginScreenState extends State<LoginScreen> {
       body: ListView(
         children: [
           // email
-          TextField(
+          CustomTextField(
             controller: _emailController,
+            prefixIcon: const Icon(Icons.person_rounded),
+            hintText: "Enter your email",
           ),
 
-          //password
-          TextField(
+          // password
+          CustomTextField(
             controller: _passwordController,
+            prefixIcon: const Icon(Icons.lock_rounded),
+            obscureText: true,
+            hintText: "Enter your password",
           ),
 
-          //button
-          ElevatedButton(onPressed: login, child: const Text("Login")),
+          // button
+          CustomButton(onPressed: login, label: "Login"),
         ],
       ),
     );
