@@ -30,7 +30,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
         });
 
     return Scaffold(
-      appBar: const CustomAppBar(title: 'Employees'),
+      appBar:  CustomAppBar(title: 'Employees'),
       body: Column(
         children: [
           Padding(

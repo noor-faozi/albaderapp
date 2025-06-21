@@ -1,4 +1,5 @@
 import 'package:albaderapp/auth/auth_service.dart';
+import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/widgets/custom_button.dart';
 import 'package:albaderapp/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
@@ -35,25 +36,59 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ListView(
+      body: Column(
         children: [
-          // email
-          CustomTextField(
-            controller: _emailController,
-            prefixIcon: const Icon(Icons.person_rounded),
-            hintText: "Enter your email",
+          // Image at the absolute top
+          Image.asset(
+            'assets/images/login_background.png',
+            width: double.infinity,
+            fit: BoxFit.cover,
           ),
 
-          // password
-          CustomTextField(
-            controller: _passwordController,
-            prefixIcon: const Icon(Icons.lock_rounded),
-            obscureText: true,
-            hintText: "Enter your password",
-          ),
+          // Scrollable login form below image
+          Expanded(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(screenPadding(context, 0.06)),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'assets/images/albader_group_logo.png',
+                        height: screenHeight(context, 0.2),
+                      ),
+                      SizedBox(height: screenHeight(context, 0.04)),
+                      // Email
+                      CustomTextField(
+                        controller: _emailController,
+                        prefixIcon: const Icon(Icons.person_rounded),
+                        hintText: "Enter your email",
+                      ),
+                      SizedBox(height: screenHeight(context, 0.025)),
 
-          // button
-          CustomButton(onPressed: login, label: "Login"),
+                      // Password
+                      CustomTextField(
+                        controller: _passwordController,
+                        prefixIcon: const Icon(Icons.lock_rounded),
+                        obscureText: true,
+                        hintText: "Enter your password",
+                      ),
+                      SizedBox(height: screenHeight(context, 0.03)),
+
+                      // Login button
+                      CustomButton(
+                        onPressed: login,
+                        label: "Login",
+                        heightFactor: 0.12,
+                        widthFactor: 0.9
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

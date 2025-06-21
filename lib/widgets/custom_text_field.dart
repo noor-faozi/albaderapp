@@ -40,8 +40,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
       obscureText: _obscureText,
       decoration: InputDecoration(
         hintText: widget.hintText,
+        hintStyle: TextStyle(fontWeight: FontWeight.normal),
         prefixIcon: widget.prefixIcon,
-        border: const OutlineInputBorder(),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         suffixIcon: widget.obscureText
             ? IconButton(
                 icon: Icon(
