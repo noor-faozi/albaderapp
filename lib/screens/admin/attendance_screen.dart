@@ -13,7 +13,7 @@ class _AttendanceState extends State<AttendanceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(title: "Attendance Form"),
+      appBar:  CustomAppBar(title: "Attendance Form"),
         body: AttendanceForm(
     ));
   }
