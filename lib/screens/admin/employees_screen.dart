@@ -57,7 +57,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
                 if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator(color: firstColor));
                 }
 
                 // Filter employees by search query (ID)
