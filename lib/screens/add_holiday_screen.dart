@@ -31,6 +31,57 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
     super.dispose();
   }
 
+  Future<void> insertFridayHolidaysManually() async {
+    final supabase = Supabase.instance.client;
+    final createdBy = supabase.auth.currentUser?.id;
+
+    final now = DateTime.now();
+    final oneYearLater = DateTime(now.year + 1, now.month, now.day);
+
+    // Generate all Fridays between now and one year later
+    List<DateTime> generateFridays(DateTime start, DateTime end) {
+      List<DateTime> fridays = [];
+      DateTime date = start;
+
+      // Move date forward to next Friday if not already Friday
+      while (date.weekday != DateTime.friday) {
+        date = date.add(const Duration(days: 1));
+      }
+
+      while (!date.isAfter(end)) {
+        fridays.add(date);
+        date = date.add(const Duration(days: 7));
+      }
+      return fridays;
+    }
+
+    final fridays = generateFridays(now, oneYearLater);
+
+    for (final friday in fridays) {
+      // Check if this date already exists to avoid duplicates
+      final existing = await supabase
+          .from('holidays')
+          .select()
+          .eq('date', friday.toIso8601String().substring(0, 10))
+          .limit(1)
+          .maybeSingle();
+
+      if (existing == null) {
+        await supabase.from('holidays').insert({
+          'date': friday.toIso8601String().substring(0, 10),
+          'title': 'Weekly Friday Off',
+          'description': 'Regular weekly Friday holiday',
+          'created_by': createdBy,
+          'is_recurring': true,
+        });
+      }
+
+    }
+
+    print('Inserted ${fridays.length} Friday holidays.');
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -113,6 +164,17 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
                   maxLines: 2,
                   prefixIcon: const Icon(Icons.note),
                 ),
+                SizedBox(height: screenHeight(context, 0.03)),
+                ElevatedButton(
+                  onPressed: () async {
+                    await insertFridayHolidaysManually();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Friday holidays inserted')),
+                    );
+                  },
+                  child: const Text('Generate Friday Holidays'),
+                ),
+
               ],
             ),
           ),
