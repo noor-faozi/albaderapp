@@ -248,7 +248,31 @@ Future<void> submitHoliday() async {
                 SizedBox(height: screenHeight(context, 0.03)),
                 CustomButton(
                   label: 'Add Holiday',
-                  onPressed: submitHoliday,
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Confirm Action'),
+                              content: const Text(
+                                  'Are you sure you want to add this holiday?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('Cancel'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    submitHoliday();
+                                  },
+                                  child: const Text('Confirm'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                   widthFactor: 0.8,
                   heightFactor: 0.1,
                 ),
