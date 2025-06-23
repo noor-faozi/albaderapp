@@ -98,50 +98,58 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
     );
   }
 
-  Future<void> submitHoliday() async {
+Future<void> submitHoliday() async {
     if (!_formKey.currentState!.validate()) return;
 
     final supabase = Supabase.instance.client;
     final createdBy = supabase.auth.currentUser?.id;
     final formattedDate = _selectedDate.toIso8601String().substring(0, 10);
 
-    final existing = await supabase
-        .from('holidays')
-        .select()
-        .eq('date', formattedDate)
-        .limit(1)
-        .maybeSingle();
+    try {
+      // 1. Check if the date already exists
+      final existing = await supabase
+          .from('holidays')
+          .select()
+          .eq('date', formattedDate)
+          .limit(1)
+          .maybeSingle();
 
-    if (existing != null) {
+      if (existing != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('A holiday already exists on that date.'),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+        return;
+      }
+
+      // 2. Insert the new holiday (this will throw if it fails)
+      await supabase.from('holidays').insert({
+        'date': formattedDate,
+        'title': _titleController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'created_by': createdBy,
+        'is_recurring': false,
+      });
+
+      // 3. Success feedback
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('A holiday already exists on that date.'),
-          backgroundColor: Colors.red.shade700,
+          content: const Text('Holiday saved successfully!'),
+          backgroundColor: Colors.green.shade700,
         ),
       );
-      return;
-    }
-
-    final response = await supabase.from('holidays').insert({
-      'date': formattedDate,
-      'title': _titleController.text.trim(),
-      'description': _descriptionController.text.trim(),
-      'created_by': createdBy,
-      'is_recurring': false,
-    });
-
-    if (response.error == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: const Text('Holiday saved successfully!'),
-            backgroundColor: Colors.green.shade700),
-      );
       Navigator.of(context).pop();
-    } else {
+    } catch (e) {
+      // 4. Error feedback
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('Error: ${response.error!.message}'),
-            backgroundColor: Colors.red.shade700),
+          content: Text('Unexpected error: $e'),
+          backgroundColor: Colors.red.shade700,
+        ),
       );
     }
   }
