@@ -1,5 +1,6 @@
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
+import 'package:albaderapp/widgets/custom_button.dart';
 import 'package:albaderapp/widgets/custom_secondary_app_bar.dart';
 import 'package:albaderapp/widgets/custom_text_form_field.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
   final _descriptionController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   final String? createdBy = Supabase.instance.client.auth.currentUser?.id;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -32,22 +34,23 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
   }
 
   Future<void> insertFridayHolidaysManually() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final supabase = Supabase.instance.client;
     final createdBy = supabase.auth.currentUser?.id;
 
     final now = DateTime.now();
     final oneYearLater = DateTime(now.year + 1, now.month, now.day);
+    final year = now.year;
 
-    // Generate all Fridays between now and one year later
     List<DateTime> generateFridays(DateTime start, DateTime end) {
       List<DateTime> fridays = [];
       DateTime date = start;
-
-      // Move date forward to next Friday if not already Friday
       while (date.weekday != DateTime.friday) {
         date = date.add(const Duration(days: 1));
       }
-
       while (!date.isAfter(end)) {
         fridays.add(date);
         date = date.add(const Duration(days: 7));
@@ -56,9 +59,9 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
     }
 
     final fridays = generateFridays(now, oneYearLater);
+    int insertedCount = 0;
 
     for (final friday in fridays) {
-      // Check if this date already exists to avoid duplicates
       final existing = await supabase
           .from('holidays')
           .select()
@@ -74,11 +77,25 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
           'created_by': createdBy,
           'is_recurring': true,
         });
+        insertedCount++;
       }
-
     }
 
-    print('Inserted ${fridays.length} Friday holidays.');
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(insertedCount == 0
+            ? 'No Friday holidays were added.'
+            : 'Inserted $insertedCount Friday holidays for one year.'),
+        backgroundColor:
+            insertedCount == 0 ? Colors.red.shade700 : Colors.green.shade700,
+      ),
+    );
   }
 
 
@@ -165,14 +182,37 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
                   prefixIcon: const Icon(Icons.note),
                 ),
                 SizedBox(height: screenHeight(context, 0.03)),
-                ElevatedButton(
-                  onPressed: () async {
-                    await insertFridayHolidaysManually();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Friday holidays inserted')),
-                    );
-                  },
-                  child: const Text('Generate Friday Holidays'),
+                CustomButton(
+                  label:
+                      _isLoading ? 'Generating...' : 'Generate Friday Holidays',
+                  widthFactor: 0.8,
+                  heightFactor: 0.1,
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Confirm Action'),
+                              content: const Text(
+                                  'Are you sure you want to generate Friday holidays for one year?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('Cancel'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.of(context)
+                                        .pop(); // close dialog first
+                                    insertFridayHolidaysManually(); // starts the task
+                                  },
+                                  child: const Text('Confirm'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                 ),
 
               ],
