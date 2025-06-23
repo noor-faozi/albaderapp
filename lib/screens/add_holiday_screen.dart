@@ -98,6 +98,53 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
     );
   }
 
+  Future<void> submitHoliday() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final supabase = Supabase.instance.client;
+    final createdBy = supabase.auth.currentUser?.id;
+    final formattedDate = _selectedDate.toIso8601String().substring(0, 10);
+
+    final existing = await supabase
+        .from('holidays')
+        .select()
+        .eq('date', formattedDate)
+        .limit(1)
+        .maybeSingle();
+
+    if (existing != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('A holiday already exists on that date.'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      return;
+    }
+
+    final response = await supabase.from('holidays').insert({
+      'date': formattedDate,
+      'title': _titleController.text.trim(),
+      'description': _descriptionController.text.trim(),
+      'created_by': createdBy,
+      'is_recurring': false,
+    });
+
+    if (response.error == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: const Text('Holiday saved successfully!'),
+            backgroundColor: Colors.green.shade700),
+      );
+      Navigator.of(context).pop();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Error: ${response.error!.message}'),
+            backgroundColor: Colors.red.shade700),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -173,6 +220,12 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
                   controller: _titleController,
                   labelText: "Holiday Title",
                   prefixIcon: const Icon(Icons.celebration),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return "Please enter a holiday tile";
+                    }
+                    return null;
+                  },
                 ),
                 SizedBox(height: screenHeight(context, 0.03)),
                 CustomTextFormField(
@@ -180,6 +233,13 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
                   labelText: "Description (optional)",
                   maxLines: 2,
                   prefixIcon: const Icon(Icons.note),
+                ),
+                SizedBox(height: screenHeight(context, 0.03)),
+                CustomButton(
+                  label: 'Add Holiday',
+                  onPressed: submitHoliday,
+                  widthFactor: 0.8,
+                  heightFactor: 0.1,
                 ),
                 SizedBox(height: screenHeight(context, 0.03)),
                 CustomButton(
@@ -203,9 +263,8 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
                                 ),
                                 ElevatedButton(
                                   onPressed: () {
-                                    Navigator.of(context)
-                                        .pop(); 
-                                    insertFridayHolidaysManually(); 
+                                    Navigator.of(context).pop();
+                                    insertFridayHolidaysManually();
                                   },
                                   child: const Text('Confirm'),
                                 ),
@@ -214,7 +273,6 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
                           );
                         },
                 ),
-
               ],
             ),
           ),
