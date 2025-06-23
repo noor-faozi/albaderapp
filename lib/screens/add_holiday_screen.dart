@@ -140,7 +140,7 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
                                 if (date != null) {
                                   setState(() {
                                     _selectedDate = date;
-                                    field.didChange(date); // update form state
+                                    field.didChange(date);
                                   });
                                 }
                               },
@@ -204,8 +204,8 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
                                 ElevatedButton(
                                   onPressed: () {
                                     Navigator.of(context)
-                                        .pop(); // close dialog first
-                                    insertFridayHolidaysManually(); // starts the task
+                                        .pop(); 
+                                    insertFridayHolidaysManually(); 
                                   },
                                   child: const Text('Confirm'),
                                 ),
