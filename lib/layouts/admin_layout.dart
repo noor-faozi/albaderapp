@@ -1,6 +1,6 @@
 import 'package:albaderapp/screens/admin/attendance_screen.dart';
 import 'package:albaderapp/screens/admin/employees_screen.dart';
-import 'package:albaderapp/screens/admin/holidays.dart';
+import 'package:albaderapp/screens/admin/holidays_screen.dart';
 import 'package:albaderapp/screens/admin/overtime_attendance.dart';
 import 'package:albaderapp/screens/admin/reports.dart';
 import 'package:albaderapp/theme/colors.dart';
@@ -20,7 +20,7 @@ class _AdminLayoutState extends State<AdminLayout> {
     const EmployeesScreen(),
     const AttendanceScreen(),
     const OvertimeAttendance(),
-    const Holidays(),
+    const HolidaysScreen(),
     const Reports()
   ];
 

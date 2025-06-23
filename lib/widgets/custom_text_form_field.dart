@@ -12,21 +12,22 @@ class CustomTextFormField extends StatefulWidget {
   final Widget? suffixIcon;
   final void Function(String)? onChanged;
   final int? maxLength;
+  final int? maxLines;
   final List<TextInputFormatter>? inputFormatters;
 
-  const CustomTextFormField({
-    super.key,
-    required this.controller,
-    required this.labelText,
-    this.isPassword = false,
-    this.validator,
-    this.keyboardType = TextInputType.text,
-    this.prefixIcon,
-    this.suffixIcon,
-    this.onChanged,
-    this.maxLength,
-    this.inputFormatters
-  });
+  const CustomTextFormField(
+      {super.key,
+      required this.controller,
+      required this.labelText,
+      this.isPassword = false,
+      this.validator,
+      this.keyboardType = TextInputType.text,
+      this.prefixIcon,
+      this.suffixIcon,
+      this.onChanged,
+      this.maxLength,
+      this.maxLines,
+      this.inputFormatters});
 
   @override
   State<CustomTextFormField> createState() => _CustomTextFormFieldState();
@@ -41,7 +42,7 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
     super.initState();
     _focusNode = FocusNode();
     _focusNode.addListener(() {
-      setState(() {}); 
+      setState(() {});
     });
   }
 
@@ -51,10 +52,8 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
-
     return TextFormField(
       controller: widget.controller,
       focusNode: _focusNode,
@@ -63,6 +62,7 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
       validator: widget.validator,
       onChanged: widget.onChanged,
       maxLength: widget.maxLength,
+      maxLines: widget.maxLines,
       inputFormatters: widget.inputFormatters,
       decoration: InputDecoration(
         labelText: widget.labelText,
@@ -86,9 +86,7 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
         prefixIcon: widget.prefixIcon != null
             ? IconTheme(
                 data: IconThemeData(
-                  color: _focusNode.hasFocus
-                      ? firstColor
-                      : gray500,
+                  color: _focusNode.hasFocus ? firstColor : gray500,
                 ),
                 child: widget.prefixIcon!,
               )
@@ -97,9 +95,7 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
             ? IconButton(
                 icon: Icon(
                   _showPassword ? Icons.visibility_off : Icons.visibility,
-                  color: _focusNode.hasFocus
-                      ? firstColor
-                      : gray500,
+                  color: _focusNode.hasFocus ? firstColor : gray500,
                 ),
                 onPressed: () {
                   setState(() {
@@ -109,7 +105,6 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
               )
             : widget.suffixIcon,
       ),
-
     );
   }
 }
