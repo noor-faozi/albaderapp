@@ -62,6 +62,7 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
     int insertedCount = 0;
 
     for (final friday in fridays) {
+      // Check if the date already exists
       final existing = await supabase
           .from('holidays')
           .select()
@@ -69,6 +70,7 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
           .limit(1)
           .maybeSingle();
 
+      // Insert the new holiday
       if (existing == null) {
         await supabase.from('holidays').insert({
           'date': friday.toIso8601String().substring(0, 10),
@@ -87,6 +89,7 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
       _isLoading = false;
     });
 
+    // Success and error feedbacks
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(insertedCount == 0
@@ -106,7 +109,7 @@ Future<void> submitHoliday() async {
     final formattedDate = _selectedDate.toIso8601String().substring(0, 10);
 
     try {
-      // 1. Check if the date already exists
+      // Check if the date already exists
       final existing = await supabase
           .from('holidays')
           .select()
@@ -124,7 +127,7 @@ Future<void> submitHoliday() async {
         return;
       }
 
-      // 2. Insert the new holiday (this will throw if it fails)
+      // Insert the new holiday
       await supabase.from('holidays').insert({
         'date': formattedDate,
         'title': _titleController.text.trim(),
@@ -133,7 +136,7 @@ Future<void> submitHoliday() async {
         'is_recurring': false,
       });
 
-      // 3. Success feedback
+      // Success feedback
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -143,7 +146,7 @@ Future<void> submitHoliday() async {
       );
       Navigator.of(context).pop();
     } catch (e) {
-      // 4. Error feedback
+      // Error feedback
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
