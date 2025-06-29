@@ -87,6 +87,13 @@ class _AttendanceFormState extends State<AttendanceForm> {
       });
     }
 
+    if (_totalHours == null || _totalHours! <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Total hours must be greater than 0')),
+      );
+      return;
+    }
+
     if (_employee == null ||
         _inTime == null ||
         _outTime == null ||
