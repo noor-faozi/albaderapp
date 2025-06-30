@@ -72,7 +72,6 @@ class _OvertimeRecordsScreenState extends State<OvertimeRecordsScreen> {
                   }
                 }
 
-
                 return OvertimeDataTableWidget(
                   overtime: overtime,
                   onEdit: (ovt) {
@@ -142,7 +141,9 @@ class OvertimeDataTable extends DataTableSource {
       DataCell(Text(ovt['date']?.toString().split('T').first ?? '')),
       DataCell(Text(TimeUtils.formatTime(ovt['in_time']))),
       DataCell(Text(TimeUtils.formatTime(ovt['out_time']))),
-      DataCell(Text(ovt['total_hours']?.toString() ?? '')),
+      DataCell(Text(ovt['total_hours'] != null
+          ? TimeUtils.formatHoursToHM(ovt['total_hours'])
+          : '')),
       DataCell(Text('${(ovt['amount'] ?? 0).toStringAsFixed(4)} AED')),
       DataCell(Text(isHoliday ? 'Holiday' : 'Normal')),
       DataCell(Row(

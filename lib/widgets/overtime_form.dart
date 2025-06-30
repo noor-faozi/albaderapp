@@ -25,6 +25,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
   final _workOrderIdController = TextEditingController();
   final _inTimeController = TextEditingController();
   final _outTimeController = TextEditingController();
+  bool _isLoading = false;
 
   Map<String, dynamic>? _employee;
   Map<String, dynamic>? _workOrder;
@@ -63,8 +64,32 @@ class _OvertimeFormState extends State<OvertimeForm> {
     super.initState();
   }
 
+  void _resetForm() {
+    _formKey.currentState?.reset();
+
+    _employeeIdController.clear();
+    _workOrderIdController.clear();
+    _inTimeController.clear();
+    _outTimeController.clear();
+
+    setState(() {
+      _employee = null;
+      _workOrder = null;
+      _selectedDate = DateTime.now();
+      _inTime = null;
+      _outTime = null;
+      _selectedWoId = null;
+      _employeeNotFound = false;
+      _workOrderNotFound = false;
+    });
+  }
+
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _isLoading = true;
+    });
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -87,7 +112,10 @@ class _OvertimeFormState extends State<OvertimeForm> {
 
     if (_totalHours == null || _totalHours! <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Total hours must be greater than 0')),
+        SnackBar(
+          content: const Text('Total hours must be greater than 0'),
+          backgroundColor: Colors.red.shade700,
+        ),
       );
       return;
     }
@@ -97,7 +125,10 @@ class _OvertimeFormState extends State<OvertimeForm> {
         _outTime == null ||
         _workOrder == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete all fields')),
+        SnackBar(
+          content: const Text('Please complete all fields'),
+          backgroundColor: Colors.red.shade700,
+        ),
       );
       return;
     }
@@ -115,7 +146,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
 
     //Check for existing overtime attendance for this employee on this date
     final existing = await supabase
-        .from('attendance')
+        .from('overtime')
         .select()
         .eq('employee_id', employeeId)
         .eq('date', formattedDate)
@@ -123,9 +154,12 @@ class _OvertimeFormState extends State<OvertimeForm> {
 
     if (existing != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text(
-                'Attendance already submitted for this employee on this date')),
+        SnackBar(
+          content: const Text(
+            'Attendance already submitted for this employee on this date',
+          ),
+          backgroundColor: Colors.red.shade700,
+        ),
       );
       return;
     }
@@ -154,10 +188,16 @@ class _OvertimeFormState extends State<OvertimeForm> {
     };
 
     await supabase.from('overtime').insert(data);
-
+    setState(() {
+      _isLoading = false;
+    });
+      _resetForm();
     // Success
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Overtime submitted successfully')),
+      SnackBar(
+        content: const Text('Overtime submitted successfully'),
+        backgroundColor: Colors.green.shade700,
+      ),
     );
   }
 
@@ -177,7 +217,11 @@ class _OvertimeFormState extends State<OvertimeForm> {
               padding: EdgeInsets.all(screenPadding(context, 0.06)),
               child: Column(
                 children: [
-                  const Center(child: Text("Overtime Form", style: TextStyle(fontSize: 18),)),
+                  const Center(
+                      child: Text(
+                    "Overtime Form",
+                    style: TextStyle(fontSize: 18),
+                  )),
                   SizedBox(height: screenHeight(context, 0.025)),
                   FormField<DateTime>(
                     validator: (value) {
@@ -208,13 +252,17 @@ class _OvertimeFormState extends State<OvertimeForm> {
                                   if (date != null) {
                                     setState(() {
                                       _selectedDate = date;
-                                      field.didChange(date); // update form state
+                                      field
+                                          .didChange(date); // update form state
                                     });
                                   }
                                 },
                                 icon: const Icon(Icons.calendar_today),
                                 label: Text(
-                                  _selectedDate.toLocal().toString().split(' ')[0],
+                                  _selectedDate
+                                      .toLocal()
+                                      .toString()
+                                      .split(' ')[0],
                                   style: const TextStyle(fontSize: 16),
                                 ),
                               ),
@@ -222,20 +270,21 @@ class _OvertimeFormState extends State<OvertimeForm> {
                           ),
                           if (field.hasError)
                             Padding(
-                              padding: const EdgeInsets.only(left: 4.0, top: 4.0),
+                              padding:
+                                  const EdgeInsets.only(left: 4.0, top: 4.0),
                               child: Text(
                                 field.errorText!,
-                                style:
-                                    const TextStyle(color: darkRed, fontSize: 12),
+                                style: const TextStyle(
+                                    color: darkRed, fontSize: 12),
                               ),
                             ),
                         ],
                       );
                     },
                   ),
-              
+
                   SizedBox(height: screenHeight(context, 0.025)),
-              
+
                   // Employee:
                   SearchAndDisplayCard<Map<String, dynamic>>(
                     controller: _employeeIdController,
@@ -252,9 +301,10 @@ class _OvertimeFormState extends State<OvertimeForm> {
                       children: [
                         Text(
                           "Employee Details",
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         const SizedBox(height: 8),
                         Text("Employee Code: ${employee['id']}"),
@@ -263,9 +313,9 @@ class _OvertimeFormState extends State<OvertimeForm> {
                       ],
                     ),
                   ),
-              
+
                   SizedBox(height: screenHeight(context, 0.025)),
-              
+
                   // Work Order:
                   SearchAndDisplayCard<Map<String, dynamic>>(
                     controller: _workOrderIdController,
@@ -282,9 +332,10 @@ class _OvertimeFormState extends State<OvertimeForm> {
                       children: [
                         Text(
                           "Work Order Details",
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         const SizedBox(height: 8),
                         Text("Work Order Code: ${workOrder['id']}"),
@@ -292,9 +343,9 @@ class _OvertimeFormState extends State<OvertimeForm> {
                       ],
                     ),
                   ),
-              
+
                   SizedBox(height: screenHeight(context, 0.025)),
-              
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -320,7 +371,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
                       ),
                     ],
                   ),
-              
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -346,7 +397,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
                       ),
                     ],
                   ),
-              
+
                   Row(
                     children: [
                       const Text(
@@ -367,23 +418,48 @@ class _OvertimeFormState extends State<OvertimeForm> {
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),
                             isDense: true,
-                            contentPadding:
-                                EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 10, horizontal: 12),
                           ),
                         ),
                       ),
                     ],
                   ),
-              
+
                   const SizedBox(height: 12),
-              
+
                   const SizedBox(height: 12),
-              
+
                   CustomButton(
-                    label: 'Submit Overtime',
-                    onPressed: _submitForm,
-                    widthFactor: 0.5,
+                    label: _isLoading ? 'Loading...' : 'Add Overtime',
+                    widthFactor: 0.8,
                     heightFactor: 0.1,
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Confirm Action'),
+                                content: const Text(
+                                    'Are you sure you want to enter this overtime record?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      _submitForm();
+                                    },
+                                    child: const Text('Confirm'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                   ),
                 ],
               ),
