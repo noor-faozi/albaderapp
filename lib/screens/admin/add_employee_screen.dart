@@ -78,7 +78,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomSecondaryAppBar(title: "Add Employee"),
+      appBar: const CustomSecondaryAppBar(title: "Employees"),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),

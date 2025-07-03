@@ -18,7 +18,9 @@ class CustomSecondaryAppBar extends StatelessWidget implements PreferredSizeWidg
           Navigator.pop(context);
         },
       ),
-      title: Text(title),
+      title: Text(title,
+        style: const TextStyle(fontSize: 22),
+      ),
       centerTitle: true,
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.white,

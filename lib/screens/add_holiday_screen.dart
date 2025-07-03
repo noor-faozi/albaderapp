@@ -160,7 +160,7 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomSecondaryAppBar(title: "Add Holiday"),
+      appBar: const CustomSecondaryAppBar(title: "Holiday"),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),

@@ -1,6 +1,7 @@
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/widgets/custom_app_bar.dart';
+import 'package:albaderapp/widgets/styled_date_table.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:albaderapp/utils/time_utils.dart';
@@ -23,12 +24,12 @@ class _OvertimeRecordsScreenState extends State<OvertimeRecordsScreen> {
     final Stream<List<Map<String, dynamic>>> overtimeStream = supabase
         .from('overtime_with_employee')
         .stream(primaryKey: ['id'])
-        .order('id')
+        .order('date')
         .map((event) {
           return (event as List).cast<Map<String, dynamic>>();
         });
     return Scaffold(
-      appBar: CustomAppBar(title: 'overtime'),
+      appBar: CustomAppBar(title: 'Overtime'),
       body: Column(
         children: [
           Padding(
@@ -134,7 +135,8 @@ class OvertimeDataTable extends DataTableSource {
     final ovt = overtime[index];
     final isHoliday = ovt['holiday_id'] != null;
 
-    return DataRow(cells: [
+    final rowColor = index % 2 == 0 ? Colors.white : Colors.grey[100];
+    return DataRow(color: WidgetStateProperty.all(rowColor), cells: [
       DataCell(Text(ovt['employee_id'].toString())),
       DataCell(Text(ovt['employee_name'] ?? '')),
       DataCell(Text(ovt['profession'] ?? '')),
@@ -223,24 +225,26 @@ class _OvertimeDataTableWidgetState extends State<OvertimeDataTableWidget> {
           horizontal: screenWidth(context, 0.04),
           vertical: screenHeight(context, 0.02),
         ),
-        child: PaginatedDataTable(
-          header: const Text('Overtime Records'),
-          rowsPerPage: 7,
-          columns: const [
-            DataColumn(label: Text('Employee ID')),
-            DataColumn(label: Text('Name')),
-            DataColumn(label: Text('Profession')),
-            DataColumn(label: Text('Date')),
-            DataColumn(label: Text('In Time')),
-            DataColumn(label: Text('Out Time')),
-            DataColumn(label: Text('Total Hours')),
-            DataColumn(label: Text('Amount')),
-            DataColumn(label: Text('Type')),
-            DataColumn(label: Text('Submitted By')),
-            DataColumn(label: Text('Approved By')),
-            DataColumn(label: Text('Action')),
-          ],
-          source: _data,
+        child: StyledDataTable(
+          child: PaginatedDataTable(
+            header: const Text('Overtime Records'),
+            rowsPerPage: 7,
+            columns: const [
+              DataColumn(label: Text('Employee ID')),
+              DataColumn(label: Text('Name')),
+              DataColumn(label: Text('Profession')),
+              DataColumn(label: Text('Date')),
+              DataColumn(label: Text('In Time')),
+              DataColumn(label: Text('Out Time')),
+              DataColumn(label: Text('Total Hours')),
+              DataColumn(label: Text('Amount')),
+              DataColumn(label: Text('Type')),
+              DataColumn(label: Text('Submitted By')),
+              DataColumn(label: Text('Approved By')),
+              DataColumn(label: Text('Action')),
+            ],
+            source: _data,
+          ),
         ),
       ),
     );
