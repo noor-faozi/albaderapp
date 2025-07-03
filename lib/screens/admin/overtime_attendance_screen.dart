@@ -17,7 +17,7 @@ class _OvertimeAttendanceState extends State<OvertimeAttendanceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: "Overtime Page"),
+      appBar: CustomAppBar(title: "Overtime"),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

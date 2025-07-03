@@ -2,6 +2,7 @@ import 'package:albaderapp/screens/admin/add_employee_screen.dart';
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/widgets/custom_app_bar.dart';
+import 'package:albaderapp/widgets/styled_date_table.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -17,7 +18,6 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
 
   String searchQuery = '';
 
-
   @override
   Widget build(BuildContext context) {
     // Stream with optional filter
@@ -30,7 +30,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
         });
 
     return Scaffold(
-      appBar:  CustomAppBar(title: 'Employees'),
+      appBar: CustomAppBar(title: 'Employees'),
       body: Column(
         children: [
           Padding(
@@ -57,7 +57,8 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
                 if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator(color: firstColor));
+                  return const Center(
+                      child: CircularProgressIndicator(color: firstColor));
                 }
 
                 // Filter employees by search query (ID)
@@ -117,7 +118,8 @@ class EmployeesDataTable extends DataTableSource {
     if (index >= employees.length) return null;
 
     final emp = employees[index];
-    return DataRow(cells: [
+    final rowColor = index % 2 == 0 ? Colors.white : Colors.grey[100];
+    return DataRow(color: WidgetStateProperty.all(rowColor), cells: [
       DataCell(Text(emp['id'].toString())),
       DataCell(Text(emp['name'] ?? '')),
       DataCell(Text(emp['profession'] ?? '')),
@@ -193,19 +195,21 @@ class _EmployeesDataTableWidgetState extends State<EmployeesDataTableWidget> {
     return SingleChildScrollView(
       child: Padding(
         padding: EdgeInsets.symmetric(
-        horizontal: screenWidth(context, 0.04),
-        vertical: screenHeight(context, 0.02),
-      ),
-        child: PaginatedDataTable(
-          header: const Text('Employees'),
-          rowsPerPage: 7,
-          columns: const [
-            DataColumn(label: Text('ID')),
-            DataColumn(label: Text('Name')),
-            DataColumn(label: Text('Profession')),
-            DataColumn(label: Text('Action')), // Added column
-          ],
-          source: _data,
+          horizontal: screenWidth(context, 0.04),
+          vertical: screenHeight(context, 0.02),
+        ),
+        child: StyledDataTable(
+          child: PaginatedDataTable(
+            header: const Text('Employees'),
+            rowsPerPage: 7,
+            columns: const [
+              DataColumn(label: Text('ID')),
+              DataColumn(label: Text('Name')),
+              DataColumn(label: Text('Profession')),
+              DataColumn(label: Text('Action')), // Added column
+            ],
+            source: _data,
+          ),
         ),
       ),
     );

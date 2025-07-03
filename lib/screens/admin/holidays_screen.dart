@@ -2,6 +2,7 @@ import 'package:albaderapp/screens/add_holiday_screen.dart';
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/widgets/custom_app_bar.dart';
+import 'package:albaderapp/widgets/styled_date_table.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -105,7 +106,8 @@ class HolidaysDataTable extends DataTableSource {
     if (index >= holidays.length) return null;
 
     final holiday = holidays[index];
-    return DataRow(cells: [
+    final rowColor = index % 2 == 0 ? Colors.white : Colors.grey[100];
+    return DataRow(color: WidgetStateProperty.all(rowColor), cells: [
       DataCell(Text(holiday['title'] ?? '')),
       DataCell(Text(holiday['date'] ?? '')),
       DataCell(Row(
@@ -183,15 +185,17 @@ class _EmployeesDataTableWidgetState extends State<HolidaysDataTableWidget> {
           horizontal: screenWidth(context, 0.04),
           vertical: screenHeight(context, 0.02),
         ),
-        child: PaginatedDataTable(
-          header: const Text('holidays'),
-          rowsPerPage: 7,
-          columns: const [
-            DataColumn(label: Text('Title')),
-            DataColumn(label: Text('Date')),
-            DataColumn(label: Text('Action')), // Added column
-          ],
-          source: _data,
+        child: StyledDataTable(
+          child: PaginatedDataTable(
+            header: const Text('holidays'),
+            rowsPerPage: 7,
+            columns: const [
+              DataColumn(label: Text('Title')),
+              DataColumn(label: Text('Date')),
+              DataColumn(label: Text('Action')), // Added column
+            ],
+            source: _data,
+          ),
         ),
       ),
     );
