@@ -65,6 +65,7 @@ class OvertimeApprovalCard extends StatelessWidget {
                 onPressed: onApprove,
                 widthFactor: 0.25,
                 heightFactor: 0.08,
+                textColor: Colors.green[900],
               ),
             ),
           ],

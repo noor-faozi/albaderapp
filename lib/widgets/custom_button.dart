@@ -6,6 +6,7 @@ class CustomButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final double widthFactor;
   final double heightFactor;
+  final Color? textColor; // optional text color
 
   const CustomButton({
     super.key,
@@ -13,6 +14,7 @@ class CustomButton extends StatelessWidget {
     required this.onPressed,
     this.widthFactor = 0.25,
     this.heightFactor = 0.06,
+    this.textColor, // assign in constructor
   });
 
   double screenPadding(BuildContext context, double factor) {
@@ -33,7 +35,14 @@ class CustomButton extends StatelessWidget {
           side: const BorderSide(color: gray500, width: 0.25),
           elevation: 4,
         ),
-        child: Text(label),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: textColor,
+            fontSize: 16,
+            fontWeight: FontWeight.w600
+          ),
+        ),
       ),
     );
   }
