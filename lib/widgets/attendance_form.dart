@@ -7,12 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AttendanceForm extends StatefulWidget {
-  // final String createdByRole;
   final void Function()? onSubmitSuccess;
 
   const AttendanceForm({
     super.key,
-    // required this.createdByRole,
     this.onSubmitSuccess,
   });
 
@@ -27,6 +25,7 @@ class _AttendanceFormState extends State<AttendanceForm> {
   final _workOrderIdController = TextEditingController();
   final _inTimeController = TextEditingController();
   final _outTimeController = TextEditingController();
+  bool _isLoading = false;
 
   Map<String, dynamic>? _employee;
   Map<String, dynamic>? _workOrder;
@@ -65,8 +64,31 @@ class _AttendanceFormState extends State<AttendanceForm> {
     super.initState();
   }
 
+  void _resetForm() {
+    _formKey.currentState?.reset();
+
+    _employeeIdController.clear();
+    _workOrderIdController.clear();
+    _inTimeController.clear();
+    _outTimeController.clear();
+
+    setState(() {
+      _employee = null;
+      _workOrder = null;
+      _selectedDate = DateTime.now();
+      _inTime = null;
+      _outTime = null;
+      _selectedWoId = null;
+      _employeeNotFound = false;
+      _workOrderNotFound = false;
+    });
+  }
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _isLoading = true;
+    });
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -99,7 +121,10 @@ class _AttendanceFormState extends State<AttendanceForm> {
         _outTime == null ||
         _workOrder == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete all fields')),
+        SnackBar(
+          content: const Text('Please complete all fields'),
+          backgroundColor: Colors.red.shade700,
+        ),
       );
       return;
     }
@@ -117,9 +142,11 @@ class _AttendanceFormState extends State<AttendanceForm> {
 
     if (existing != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text(
-                'Attendance already submitted for this employee on this date')),
+        SnackBar(
+          content: const Text(
+              'Attendance already submitted for this employee on this date'),
+          backgroundColor: Colors.red.shade700,
+        ),
       );
       return;
     }
@@ -136,9 +163,16 @@ class _AttendanceFormState extends State<AttendanceForm> {
     };
 
     await supabase.from('attendance').insert(data);
+    setState(() {
+      _isLoading = false;
+    });
+    _resetForm();
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Attendance submitted')),
+      SnackBar(
+        content: const Text('Attendance submitted'),
+        backgroundColor: Colors.green.shade700,
+      ),
     );
   }
 
@@ -355,10 +389,41 @@ class _AttendanceFormState extends State<AttendanceForm> {
               const SizedBox(height: 12),
 
               CustomButton(
-                label: 'Submit Attendance',
-                onPressed: _submitForm,
-                widthFactor: 0.5,
+                label: _isLoading ? 'Loading...' : 'Add Attendance',
+                widthFactor: 0.8,
                 heightFactor: 0.1,
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Confirm Action'),
+                            content: const Text(
+                                'Are you sure you want to submit this attendance record?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: Text('Cancel',
+                                    style: TextStyle(
+                                        color: Colors.red[900], fontSize: 16)),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  _submitForm();
+                                },
+                                child: const Text(
+                                  'Confirm',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
               ),
             ],
           ),

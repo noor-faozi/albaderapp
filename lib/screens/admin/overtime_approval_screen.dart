@@ -18,7 +18,8 @@ class _OvertimeApprovalScreenState extends State<OvertimeApprovalScreen> {
     final response = await supabase
         .from('overtime_with_employee')
         .select()
-        .isFilter('approved_by', null);
+        .isFilter('approved_by', null)
+        .order('date', ascending: false);
 
     setState(() {
       pendingApprovals = List<Map<String, dynamic>>.from(response);
@@ -33,7 +34,7 @@ class _OvertimeApprovalScreenState extends State<OvertimeApprovalScreen> {
         .from('overtime')
         .update({'approved_by': userId}).eq('id', id);
 
-    await fetchPendingOvertime(); // refresh
+    await fetchPendingOvertime(); 
   }
 
   @override
@@ -45,7 +46,7 @@ class _OvertimeApprovalScreenState extends State<OvertimeApprovalScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomSecondaryAppBar(title:  "Overtime Approvals"),
+      appBar: const CustomSecondaryAppBar(title: "Overtime Approvals"),
       body: pendingApprovals.isEmpty
           ? const Center(child: Text("No pending overtime"))
           : ListView.builder(

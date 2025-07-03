@@ -84,7 +84,6 @@ class _OvertimeFormState extends State<OvertimeForm> {
     });
   }
 
-
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() {
@@ -191,7 +190,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
     setState(() {
       _isLoading = false;
     });
-      _resetForm();
+    _resetForm();
     // Success
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -442,19 +441,25 @@ class _OvertimeFormState extends State<OvertimeForm> {
                               builder: (context) => AlertDialog(
                                 title: const Text('Confirm Action'),
                                 content: const Text(
-                                    'Are you sure you want to enter this overtime record?'),
+                                    'Are you sure you want to submit this overtime record?'),
                                 actions: [
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.of(context).pop(),
-                                    child: const Text('Cancel'),
+                                    child: Text('Cancel',
+                                        style:
+                                            TextStyle(color: Colors.red[900])),
                                   ),
-                                  ElevatedButton(
+                                  TextButton(
                                     onPressed: () {
                                       Navigator.of(context).pop();
                                       _submitForm();
                                     },
-                                    child: const Text('Confirm'),
+                                    child: const Text('Confirm',
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                    ),
                                   ),
                                 ],
                               ),

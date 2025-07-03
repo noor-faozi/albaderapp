@@ -46,23 +46,55 @@ class OvertimeApprovalCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _buildBoldText("Time In: ", TimeUtils.formatTime(overtime['in_time'])),
+                  child: _buildBoldText(
+                      "Time In: ", TimeUtils.formatTime(overtime['in_time'])),
                 ),
                 Expanded(
-                  child:
-                      _buildBoldText("Time Out: ", TimeUtils.formatTime(overtime['out_time'])),
+                  child: _buildBoldText(
+                      "Time Out: ", TimeUtils.formatTime(overtime['out_time'])),
                 ),
               ],
             ),
-            _buildBoldText("Hours: ", overtime['total_hours'].toString()),
-            _buildBoldText("Submitted By: ",
-                "${(overtime['created_by_name'])} "),
+            _buildBoldText("Total Hours: ",
+                TimeUtils.formatHoursToHM(overtime['total_hours'])),
+            _buildBoldText(
+                "Submitted By: ", "${(overtime['created_by_name'])} "),
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,
               child: CustomButton(
                 label: "Approve",
-                onPressed: onApprove,
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Confirm Action'),
+                      content: const Text(
+                          'Are you sure you want to approve this overtime record?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: Colors.red[900],
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            onApprove?.call();
+                          },
+                          child: const Text('Confirm',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  );
+                },
                 widthFactor: 0.25,
                 heightFactor: 0.08,
                 textColor: Colors.green[900],

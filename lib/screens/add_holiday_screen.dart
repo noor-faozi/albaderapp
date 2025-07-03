@@ -101,7 +101,7 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
     );
   }
 
-Future<void> submitHoliday() async {
+  Future<void> submitHoliday() async {
     if (!_formKey.currentState!.validate()) return;
 
     final supabase = Supabase.instance.client;
@@ -260,14 +260,23 @@ Future<void> submitHoliday() async {
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.of(context).pop(),
-                                  child: const Text('Cancel'),
+                                  child: Text('Cancel',
+                                      style: TextStyle(
+                                        color: Colors.red[900],
+                                        fontSize: 16,
+                                      )),
                                 ),
-                                ElevatedButton(
+                                TextButton(
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                     submitHoliday();
                                   },
-                                  child: const Text('Confirm'),
+                                  child: const Text(
+                                    'Confirm',
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                  ),
                                 ),
                               ],
                             ),
@@ -294,9 +303,10 @@ Future<void> submitHoliday() async {
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.of(context).pop(),
-                                  child: const Text('Cancel'),
+                                  child: Text('Cancel',
+                                      style: TextStyle(color: Colors.red[900])),
                                 ),
-                                ElevatedButton(
+                                TextButton(
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                     insertFridayHolidaysManually();
