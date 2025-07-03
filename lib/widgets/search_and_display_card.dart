@@ -48,7 +48,9 @@ class SearchAndDisplayCard<T> extends StatelessWidget {
                 ],
                 decoration: InputDecoration(
                   labelText: label,
-                  border: const OutlineInputBorder(),
+                  border: const OutlineInputBorder(
+                    borderSide: BorderSide(width: 0.1,),
+                  ),
                   contentPadding: EdgeInsets.symmetric(
                     vertical: verticalPadding,
                     horizontal: horizontalPadding,
@@ -70,6 +72,7 @@ class SearchAndDisplayCard<T> extends StatelessWidget {
               child: CustomButton(
                 label: 'Search',
                 onPressed: onSearch,
+                textColor: Colors.grey[700],
               ),
             ),
           ],
