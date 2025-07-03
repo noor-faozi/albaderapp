@@ -146,6 +146,8 @@ class OvertimeDataTable extends DataTableSource {
           : '')),
       DataCell(Text('${(ovt['amount'] ?? 0).toStringAsFixed(4)} AED')),
       DataCell(Text(isHoliday ? 'Holiday' : 'Normal')),
+      DataCell(Text(ovt['created_by_name'] ?? '')),
+      DataCell(Text(ovt['approved_by_name'] ?? '')),
       DataCell(Row(
         children: [
           IconButton(
@@ -234,6 +236,8 @@ class _OvertimeDataTableWidgetState extends State<OvertimeDataTableWidget> {
             DataColumn(label: Text('Total Hours')),
             DataColumn(label: Text('Amount')),
             DataColumn(label: Text('Type')),
+            DataColumn(label: Text('Submitted By')),
+            DataColumn(label: Text('Approved By')),
             DataColumn(label: Text('Action')),
           ],
           source: _data,
