@@ -66,8 +66,9 @@ class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
                 if (searchQuery.isNotEmpty) {
                   final id = int.tryParse(searchQuery);
                   if (id != null) {
-                    attendance =
-                        attendance.where((e) => e['employee_id'] == id).toList();
+                    attendance = attendance
+                        .where((e) => e['employee_id'] == id)
+                        .toList();
                   } else {
                     attendance = [];
                   }
@@ -116,8 +117,6 @@ class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
   }
 }
 
-
-
 // DataTableSource implementation for paginated data table
 class AttendanceDataTable extends DataTableSource {
   final List<Map<String, dynamic>> attendance;
@@ -143,6 +142,7 @@ class AttendanceDataTable extends DataTableSource {
       DataCell(Text(atd['employee_name'] ?? '')),
       DataCell(Text(atd['profession'] ?? '')),
       DataCell(Text(atd['date']?.toString().split('T').first ?? '')),
+      DataCell(Text(atd['work_order_id'] ?? '')),
       DataCell(Text(TimeUtils.formatTime(atd['in_time']))),
       DataCell(Text(TimeUtils.formatTime(atd['out_time']))),
       DataCell(Text(atd['total_hours'] != null
@@ -235,6 +235,7 @@ class _AttendanceDataTableWidgetState extends State<OvertimeDataTableWidget> {
               DataColumn(label: Text('Name')),
               DataColumn(label: Text('Profession')),
               DataColumn(label: Text('Date')),
+              DataColumn(label: Text('W/O ID')),
               DataColumn(label: Text('In Time')),
               DataColumn(label: Text('Out Time')),
               DataColumn(label: Text('Total Hours')),

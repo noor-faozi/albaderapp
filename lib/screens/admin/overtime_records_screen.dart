@@ -141,6 +141,7 @@ class OvertimeDataTable extends DataTableSource {
       DataCell(Text(ovt['employee_name'] ?? '')),
       DataCell(Text(ovt['profession'] ?? '')),
       DataCell(Text(ovt['date']?.toString().split('T').first ?? '')),
+      DataCell(Text(ovt['work_order_id'] ?? '')),
       DataCell(Text(TimeUtils.formatTime(ovt['in_time']))),
       DataCell(Text(TimeUtils.formatTime(ovt['out_time']))),
       DataCell(Text(ovt['total_hours'] != null
@@ -234,6 +235,7 @@ class _OvertimeDataTableWidgetState extends State<OvertimeDataTableWidget> {
               DataColumn(label: Text('Name')),
               DataColumn(label: Text('Profession')),
               DataColumn(label: Text('Date')),
+              DataColumn(label: Text('W/O ID')),
               DataColumn(label: Text('In Time')),
               DataColumn(label: Text('Out Time')),
               DataColumn(label: Text('Total Hours')),

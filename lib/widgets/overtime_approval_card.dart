@@ -40,6 +40,10 @@ class OvertimeApprovalCard extends StatelessWidget {
               ],
             ),
             _buildBoldText(
+              "W/O ID: ",
+              overtime['work_order_id'] ?? '',
+            ),
+            _buildBoldText(
               "Date: ",
               overtime['date'].toString().split('T').first,
             ),
