@@ -29,7 +29,7 @@ class _OvertimeRecordsScreenState extends State<OvertimeRecordsScreen> {
           return (event as List).cast<Map<String, dynamic>>();
         });
     return Scaffold(
-      appBar: CustomAppBar(title: 'Overtime'),
+      appBar: CustomAppBar(title: 'Overtime Records'),
       body: Column(
         children: [
           Padding(
