@@ -5,7 +5,8 @@ import 'package:albaderapp/widgets/custom_button.dart';
 import 'package:albaderapp/widgets/date_picker_form_field.dart';
 import 'package:albaderapp/widgets/form_card_wrapper.dart';
 import 'package:albaderapp/widgets/search_and_display_card.dart';
-import 'package:albaderapp/widgets/time_picker_row.dart';
+import 'package:albaderapp/widgets/show_confirm_dialog.dart';
+import 'package:albaderapp/widgets/time_picker_form_field.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -301,15 +302,15 @@ class _OvertimeFormState extends State<OvertimeForm> {
 
                 SizedBox(height: screenHeight(context, 0.025)),
 
-                TimePickerRow(
-                  label: 'Clock In Time:',
-                  time: _inTime,
+                TimePickerFormField(
+                  label: 'Clock In Time',
+                  initialValue: _inTime,
                   onTimePicked: (picked) => setState(() => _inTime = picked),
                 ),
 
-                TimePickerRow(
+                TimePickerFormField(
                   label: 'Clock Out Time:',
-                  time: _outTime,
+                  initialValue: _outTime,
                   onTimePicked: (picked) => setState(() => _outTime = picked),
                 ),
 
@@ -351,34 +352,11 @@ class _OvertimeFormState extends State<OvertimeForm> {
                   heightFactor: 0.1,
                   onPressed: _isLoading
                       ? null
-                      : () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Confirm Action'),
-                              content: const Text(
-                                  'Are you sure you want to submit this overtime record?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: Text('Cancel',
-                                      style: TextStyle(color: Colors.red[900])),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    _submitForm();
-                                  },
-                                  child: const Text(
-                                    'Confirm',
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
+                      : () async {
+                          if (await showConfirmDialog(context,
+                              'Are you sure you want to submit this record?')) {
+                            _submitForm();
+                          }
                         },
                 ),
               ],

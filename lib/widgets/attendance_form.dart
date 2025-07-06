@@ -5,7 +5,7 @@ import 'package:albaderapp/widgets/custom_button.dart';
 import 'package:albaderapp/widgets/date_picker_form_field.dart';
 import 'package:albaderapp/widgets/form_card_wrapper.dart';
 import 'package:albaderapp/widgets/search_and_display_card.dart';
-import 'package:albaderapp/widgets/time_picker_row.dart';
+import 'package:albaderapp/widgets/time_picker_form_field.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -277,15 +277,15 @@ class _AttendanceFormState extends State<AttendanceForm> {
 
                 SizedBox(height: screenHeight(context, 0.025)),
 
-                TimePickerRow(
-                  label: 'Clock In Time:',
-                  time: _inTime,
+                TimePickerFormField(
+                  label: 'Clock In Time',
+                  initialValue: _inTime,
                   onTimePicked: (picked) => setState(() => _inTime = picked),
                 ),
 
-                TimePickerRow(
+                TimePickerFormField(
                   label: 'Clock Out Time:',
-                  time: _outTime,
+                  initialValue: _outTime,
                   onTimePicked: (picked) => setState(() => _outTime = picked),
                 ),
 
