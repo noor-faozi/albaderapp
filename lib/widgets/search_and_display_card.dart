@@ -16,6 +16,7 @@ class SearchAndDisplayCard<T> extends StatelessWidget {
   final double verticalPadding;
   final double horizontalPadding;
   final double buttonHeight;
+  final bool readOnly;
 
   const SearchAndDisplayCard({
     Key? key,
@@ -29,6 +30,7 @@ class SearchAndDisplayCard<T> extends StatelessWidget {
     required this.verticalPadding,
     required this.horizontalPadding,
     required this.buttonHeight,
+    this.readOnly = false,
   }) : super(key: key);
 
   @override
@@ -40,6 +42,7 @@ class SearchAndDisplayCard<T> extends StatelessWidget {
             Expanded(
               child: TextFormField(
                 controller: controller,
+                readOnly: readOnly,
                 keyboardType: TextInputType.number,
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly, 

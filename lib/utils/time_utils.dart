@@ -25,4 +25,11 @@ class TimeUtils {
     final parts = raw.split(':');
     return '${parts[0]}:${parts[1]}';
   }
+
+  static TimeOfDay parseTime(String timeStr) {
+    final parts = timeStr.split(':');
+    final hour = int.parse(parts[0]);
+    final minute = int.parse(parts[1]);
+    return TimeOfDay(hour: hour, minute: minute);
+  }
 }
