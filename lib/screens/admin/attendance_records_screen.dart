@@ -227,7 +227,7 @@ class _AttendanceDataTableWidgetState extends State<OvertimeDataTableWidget> {
         ),
         child: StyledDataTable(
           child: PaginatedDataTable(
-            header: const Text('attendance Records'),
+            header: const Text('Attendance Records'),
             rowsPerPage: 7,
             columns: const [
               DataColumn(label: Text('Employee ID')),

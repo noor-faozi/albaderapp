@@ -1,7 +1,10 @@
 import 'dart:math';
 
+import 'package:albaderapp/theme/colors.dart';
+import 'package:albaderapp/widgets/custom_button.dart';
 import 'package:albaderapp/widgets/custom_text_form_field.dart';
 import 'package:albaderapp/widgets/custom_secondary_app_bar.dart';
+import 'package:albaderapp/widgets/form_card_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -81,119 +84,123 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
       appBar: const CustomSecondaryAppBar(title: "Employees"),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(screenPadding(context, 0.04)),
           child: Form(
             key: _formKey,
-            child: Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(
-                      screenPadding(context, 0.05)),
-                  child: const Text(
-                    "Add New Employee",
-                    style: TextStyle(fontSize: 20),
+            child: FormCardWrapper(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(screenPadding(context, 0.05)),
+                    child: const Text(
+                      "Add New Employee",
+                      style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.7),
+                    ),
                   ),
-                ),
-
-                CustomTextFormField(
-                  controller: _employeeIdController,
-                  labelText: "Employee ID (3 digits)",
-                  keyboardType: TextInputType.number,
-                  maxLength: 3,
-                  validator: _validateEmployeeId,
-                  onChanged: _checkEmployeeIdUnique,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly
+                  CustomTextFormField(
+                    controller: _employeeIdController,
+                    labelText: "Employee ID (3 digits)",
+                    keyboardType: TextInputType.number,
+                    maxLength: 3,
+                    validator: _validateEmployeeId,
+                    onChanged: _checkEmployeeIdUnique,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    prefixIcon: const Icon(Icons.badge_rounded),
+                  ),
+                  SizedBox(height: screenHeight(context, 0.015)),
+                  CustomTextFormField(
+                    controller: _nameController,
+                    labelText: "Full Name",
+                    validator: (value) =>
+                        value == null || value.isEmpty ? "Enter name" : null,
+                    prefixIcon: const Icon(Icons.person_rounded),
+                  ),
+                  SizedBox(height: screenHeight(context, 0.025)),
+                  CustomTextFormField(
+                    controller: _usernameController,
+                    labelText: "Username",
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return "Enter username";
+                      }
+                      // Check username contains at least one number
+                      if (!RegExp(r'\d').hasMatch(value)) {
+                        return "Username must contain at least one number";
+                      }
+                      return null;
+                    },
+                    prefixIcon: const Icon(Icons.person_outline_rounded),
+                  ),
+                  SizedBox(height: screenHeight(context, 0.025)),
+                  CustomTextFormField(
+                    controller: _passwordController,
+                    labelText: 'Password',
+                    isPassword: true,
+                    prefixIcon: const Icon(Icons.lock),
+                    validator: (val) {
+                      if (val == null || val.isEmpty) return 'Enter password';
+                      if (!_isStrongPassword(val)) {
+                        return 'Password must be at least 8 characters, include uppercase, lowercase, number, and special character';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: screenHeight(context, 0.025)),
+                  CustomTextFormField(
+                    controller: _professionController,
+                    labelText: "Profession",
+                    validator: (value) => value == null || value.isEmpty
+                        ? "Enter Profession"
+                        : null,
+                    prefixIcon: const Icon(Icons.business_center_rounded),
+                  ),
+                  SizedBox(height: screenHeight(context, 0.025)),
+                  CustomTextFormField(
+                    controller: _salaryController,
+                    labelText: "Salary (AED)",
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d{0,2}$|^\d*\.?$'),
+                      ),
+                    ],
+                    validator: (value) =>
+                        value == null || value.isEmpty ? "Enter Salary" : null,
+                    prefixIcon: const Icon(Icons.payments_rounded),
+                  ),
+                  SizedBox(height: screenHeight(context, 0.025)),
+                  CustomTextFormField(
+                    controller: _allowanceController,
+                    labelText: "Allowance (AED)",
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d{0,2}$|^\d*\.?$'),
+                      ),
+                    ],
+                    validator: (value) => value == null || value.isEmpty
+                        ? "Enter Allowance"
+                        : null,
+                    prefixIcon: const Icon(Icons.payments_outlined),
+                  ),
+                  SizedBox(height: screenHeight(context, 0.035)),
+                  CustomButton(
+                    label: _isLoading ? 'Loading...' : "Add Employee",
+                    onPressed: _isLoading ? null : _handleCreateEmployee,
+                    widthFactor: 0.8,
+                    heightFactor: 0.1,
+                  ),
+                  if (_isLoading) ...[
+                    const SizedBox(height: 20),
+                    const CircularProgressIndicator(color: firstColor),
                   ],
-                  prefixIcon: const Icon(Icons.badge_rounded),
-                ),
-                SizedBox(height: screenHeight(context, 0.015)),
-                CustomTextFormField(
-                  controller: _nameController,
-                  labelText: "Full Name",
-                  validator: (value) =>
-                      value == null || value.isEmpty ? "Enter name" : null,
-                  prefixIcon: const Icon(Icons.person_rounded),
-                ),
-                SizedBox(height: screenHeight(context, 0.025)),
-                CustomTextFormField(
-                  controller: _usernameController,
-                  labelText: "Username",
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "Enter username";
-                    }
-                    // Check username contains at least one number
-                    if (!RegExp(r'\d').hasMatch(value)) {
-                      return "Username must contain at least one number";
-                    }
-                    return null;
-                  },
-                  prefixIcon: const Icon(Icons.person_outline_rounded),
-                ),
-                SizedBox(height: screenHeight(context, 0.025)),
-                CustomTextFormField(
-                  controller: _passwordController,
-                  labelText: 'Password',
-                  isPassword: true,
-                  prefixIcon: const Icon(Icons.lock),
-                  validator: (val) {
-                    if (val == null || val.isEmpty) return 'Enter password';
-                    if (!_isStrongPassword(val)) {
-                      return 'Password must be at least 8 characters, include uppercase, lowercase, number, and special character';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: screenHeight(context, 0.025)),
-                CustomTextFormField(
-                  controller: _professionController,
-                  labelText: "Profession",
-                  validator: (value) => value == null || value.isEmpty
-                      ? "Enter Profession"
-                      : null,
-                  prefixIcon: const Icon(Icons.business_center_rounded),
-                ),
-                SizedBox(height: screenHeight(context, 0.025)),
-                CustomTextFormField(
-                  controller: _salaryController,
-                  labelText: "Salary (AED)",
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                      RegExp(r'^\d+\.?\d{0,2}$|^\d*\.?$'),
-                    ),
-                  ],
-                  validator: (value) =>
-                      value == null || value.isEmpty ? "Enter Salary" : null,
-                  prefixIcon: const Icon(Icons.payments_rounded),
-                ),
-                SizedBox(height: screenHeight(context, 0.025)),
-                CustomTextFormField(
-                  controller: _allowanceController,
-                  labelText: "Allowance (AED)",
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                      RegExp(r'^\d+\.?\d{0,2}$|^\d*\.?$'),
-                    ),
-                  ],
-                  validator: (value) =>
-                      value == null || value.isEmpty ? "Enter Allowance" : null,
-                  prefixIcon: const Icon(Icons.payments_outlined),
-                ),
-                SizedBox(height: screenHeight(context, 0.035)),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _handleCreateEmployee,
-                  child: const Text("Create Employee"),
-                ),
-                if (_isLoading) ...[
-                  const SizedBox(height: 20),
-                  const CircularProgressIndicator(),
                 ],
-              ],
+              ),
             ),
           ),
         ),

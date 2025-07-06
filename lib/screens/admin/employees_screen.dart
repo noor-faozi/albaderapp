@@ -201,7 +201,7 @@ class _EmployeesDataTableWidgetState extends State<EmployeesDataTableWidget> {
         child: StyledDataTable(
           child: PaginatedDataTable(
             header: const Text('Employees'),
-            rowsPerPage: 7,
+            rowsPerPage: 5,
             columns: const [
               DataColumn(label: Text('ID')),
               DataColumn(label: Text('Name')),
