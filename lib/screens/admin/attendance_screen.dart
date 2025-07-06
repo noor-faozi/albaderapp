@@ -18,7 +18,7 @@ class _AttendanceState extends State<AttendanceScreen> {
     return Scaffold(
         appBar: CustomAppBar(title: "Attendance"),
         body: Padding(
-          padding: EdgeInsets.all(screenPadding(context, 0.06)),
+          padding: EdgeInsets.all(screenPadding(context, 0.03)),
           child: Column(
             children: [
               CustomButton(

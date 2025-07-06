@@ -217,7 +217,10 @@ class _OvertimeFormState extends State<OvertimeForm> {
                 const Center(
                     child: Text(
                   "Overtime Form",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500, letterSpacing: 0.7),
+                  style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.7),
                 )),
                 SizedBox(height: screenHeight(context, 0.025)),
                 FormField<DateTime>(
@@ -249,8 +252,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
                                 if (date != null) {
                                   setState(() {
                                     _selectedDate = date;
-                                    field
-                                        .didChange(date); // update form state
+                                    field.didChange(date); // update form state
                                   });
                                 }
                               },
@@ -267,21 +269,20 @@ class _OvertimeFormState extends State<OvertimeForm> {
                         ),
                         if (field.hasError)
                           Padding(
-                            padding:
-                                const EdgeInsets.only(left: 4.0, top: 4.0),
+                            padding: const EdgeInsets.only(left: 4.0, top: 4.0),
                             child: Text(
                               field.errorText!,
-                              style: const TextStyle(
-                                  color: darkRed, fontSize: 12),
+                              style:
+                                  const TextStyle(color: darkRed, fontSize: 12),
                             ),
                           ),
                       ],
                     );
                   },
                 ),
-                      
+
                 SizedBox(height: screenHeight(context, 0.025)),
-                      
+
                 // Employee:
                 SearchAndDisplayCard<Map<String, dynamic>>(
                   controller: _employeeIdController,
@@ -310,9 +311,9 @@ class _OvertimeFormState extends State<OvertimeForm> {
                     ],
                   ),
                 ),
-                      
+
                 SizedBox(height: screenHeight(context, 0.025)),
-                      
+
                 // Work Order:
                 SearchAndDisplayCard<Map<String, dynamic>>(
                   controller: _workOrderIdController,
@@ -340,9 +341,9 @@ class _OvertimeFormState extends State<OvertimeForm> {
                     ],
                   ),
                 ),
-                      
+
                 SizedBox(height: screenHeight(context, 0.025)),
-                      
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -368,7 +369,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
                     ),
                   ],
                 ),
-                      
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -394,7 +395,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
                     ),
                   ],
                 ),
-                      
+
                 Row(
                   children: [
                     const Text(
@@ -422,11 +423,11 @@ class _OvertimeFormState extends State<OvertimeForm> {
                     ),
                   ],
                 ),
-                      
+
                 const SizedBox(height: 12),
-                      
+
                 const SizedBox(height: 12),
-                      
+
                 CustomButton(
                   label: _isLoading ? 'Loading...' : 'Add Overtime',
                   widthFactor: 0.8,
@@ -442,11 +443,9 @@ class _OvertimeFormState extends State<OvertimeForm> {
                                   'Are you sure you want to submit this overtime record?'),
                               actions: [
                                 TextButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(),
+                                  onPressed: () => Navigator.of(context).pop(),
                                   child: Text('Cancel',
-                                      style:
-                                          TextStyle(color: Colors.red[900])),
+                                      style: TextStyle(color: Colors.red[900])),
                                 ),
                                 TextButton(
                                   onPressed: () {

@@ -2,6 +2,7 @@ import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/utils/time_utils.dart';
 import 'package:albaderapp/widgets/custom_button.dart';
+import 'package:albaderapp/widgets/form_card_wrapper.dart';
 import 'package:albaderapp/widgets/search_and_display_card.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -182,250 +183,261 @@ class _AttendanceFormState extends State<AttendanceForm> {
     final buttonHeight = screenPadding(context, 0.08); // For button height
 
     return Padding(
-      padding: EdgeInsets.all(screenPadding(context, 0.06)),
+      padding: EdgeInsets.all(screenPadding(context, 0.01)),
       child: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          child: Column(
-            children: [
-              FormField<DateTime>(
-                validator: (value) {
-                  if (_selectedDate.isAfter(DateTime.now())) {
-                    return 'Date cannot be in the future';
-                  }
-                  return null;
-                },
-                builder: (field) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Date:',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          TextButton.icon(
-                            onPressed: () async {
-                              final date = await showDatePicker(
-                                context: context,
-                                initialDate: _selectedDate,
-                                firstDate: DateTime(2020),
-                                lastDate: DateTime(2100),
-                              );
-                              if (date != null) {
-                                setState(() {
-                                  _selectedDate = date;
-                                  field.didChange(date); // update form state
-                                });
-                              }
-                            },
-                            icon: const Icon(Icons.calendar_today),
-                            label: Text(
-                              _selectedDate.toLocal().toString().split(' ')[0],
-                              style: const TextStyle(fontSize: 16),
+          child: FormCardWrapper(
+            child: Column(
+              children: [
+                const Center(
+                    child: Text(
+                  "Attendance Form",
+                  style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.7),
+                )),
+                SizedBox(height: screenHeight(context, 0.025)),
+                FormField<DateTime>(
+                  validator: (value) {
+                    if (_selectedDate.isAfter(DateTime.now())) {
+                      return 'Date cannot be in the future';
+                    }
+                    return null;
+                  },
+                  builder: (field) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Date:',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            TextButton.icon(
+                              onPressed: () async {
+                                final date = await showDatePicker(
+                                  context: context,
+                                  initialDate: _selectedDate,
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime(2100),
+                                );
+                                if (date != null) {
+                                  setState(() {
+                                    _selectedDate = date;
+                                    field.didChange(date); // update form state
+                                  });
+                                }
+                              },
+                              icon: const Icon(Icons.calendar_today),
+                              label: Text(
+                                _selectedDate.toLocal().toString().split(' ')[0],
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (field.hasError)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4.0, top: 4.0),
+                            child: Text(
+                              field.errorText!,
+                              style:
+                                  const TextStyle(color: darkRed, fontSize: 12),
                             ),
                           ),
-                        ],
+                      ],
+                    );
+                  },
+                ),
+            
+                SizedBox(height: screenHeight(context, 0.025)),
+            
+                // Employee:
+                SearchAndDisplayCard<Map<String, dynamic>>(
+                  controller: _employeeIdController,
+                  exactDigits: 3,
+                  label: 'Employee Code',
+                  onSearch: _fetchEmployee,
+                  data: _employee,
+                  notFound: _employeeNotFound,
+                  verticalPadding: verticalPadding,
+                  horizontalPadding: screenPadding(context, 0.04),
+                  buttonHeight: buttonHeight,
+                  detailsBuilder: (employee) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Employee Details",
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
-                      if (field.hasError)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4.0, top: 4.0),
-                          child: Text(
-                            field.errorText!,
-                            style:
-                                const TextStyle(color: darkRed, fontSize: 12),
-                          ),
-                        ),
+                      const SizedBox(height: 8),
+                      Text("Employee Code: ${employee['id']}"),
+                      Text("Name: ${employee['name']}"),
+                      Text("Profession: ${employee['profession']}"),
                     ],
-                  );
-                },
-              ),
-
-              SizedBox(height: screenHeight(context, 0.025)),
-
-              // Employee:
-              SearchAndDisplayCard<Map<String, dynamic>>(
-                controller: _employeeIdController,
-                exactDigits: 3,
-                label: 'Employee Code',
-                onSearch: _fetchEmployee,
-                data: _employee,
-                notFound: _employeeNotFound,
-                verticalPadding: verticalPadding,
-                horizontalPadding: screenPadding(context, 0.04),
-                buttonHeight: buttonHeight,
-                detailsBuilder: (employee) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Employee Details",
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text("Employee Code: ${employee['id']}"),
-                    Text("Name: ${employee['name']}"),
-                    Text("Profession: ${employee['profession']}"),
-                  ],
+                  ),
                 ),
-              ),
-
-              SizedBox(height: screenHeight(context, 0.025)),
-
-              // Work Order:
-              SearchAndDisplayCard<Map<String, dynamic>>(
-                controller: _workOrderIdController,
-                label: 'Work Order Code',
-                exactDigits: 10,
-                onSearch: _fetchWorkOrder,
-                data: _workOrder,
-                notFound: _workOrderNotFound,
-                verticalPadding: verticalPadding,
-                horizontalPadding: screenPadding(context, 0.04),
-                buttonHeight: buttonHeight,
-                detailsBuilder: (workOrder) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Work Order Details",
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text("Work Order Code: ${workOrder['id']}"),
-                    Text("Description: ${workOrder['description']}"),
-                  ],
+            
+                SizedBox(height: screenHeight(context, 0.025)),
+            
+                // Work Order:
+                SearchAndDisplayCard<Map<String, dynamic>>(
+                  controller: _workOrderIdController,
+                  label: 'Work Order Code',
+                  exactDigits: 10,
+                  onSearch: _fetchWorkOrder,
+                  data: _workOrder,
+                  notFound: _workOrderNotFound,
+                  verticalPadding: verticalPadding,
+                  horizontalPadding: screenPadding(context, 0.04),
+                  buttonHeight: buttonHeight,
+                  detailsBuilder: (workOrder) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Work Order Details",
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text("Work Order Code: ${workOrder['id']}"),
+                      Text("Description: ${workOrder['description']}"),
+                    ],
+                  ),
                 ),
-              ),
-
-              SizedBox(height: screenHeight(context, 0.025)),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Clock in Time:',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  TextButton.icon(
-                    onPressed: () async {
-                      final time = await showTimePicker(
-                        context: context,
-                        initialTime: _inTime ?? TimeOfDay.now(),
-                      );
-                      if (time != null) setState(() => _inTime = time);
-                    },
-                    icon: const Icon(Icons.access_time),
-                    label: Text(
-                      _inTime == null
-                          ? 'Select Time'
-                          : _inTime!.format(context),
-                      style: const TextStyle(fontSize: 16),
+            
+                SizedBox(height: screenHeight(context, 0.025)),
+            
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Clock in Time:',
+                      style: TextStyle(fontSize: 16),
                     ),
-                  ),
-                ],
-              ),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Clock out Time:',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  TextButton.icon(
-                    onPressed: () async {
-                      final time = await showTimePicker(
-                        context: context,
-                        initialTime: _outTime ?? TimeOfDay.now(),
-                      );
-                      if (time != null) setState(() => _outTime = time);
-                    },
-                    icon: const Icon(Icons.access_time),
-                    label: Text(
-                      _outTime == null
-                          ? 'Select Time'
-                          : _outTime!.format(context),
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ),
-                ],
-              ),
-
-              Row(
-                children: [
-                  const Text(
-                    'Total Hours:',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    width: screenWidth(context, 0.25),
-                    child: TextFormField(
-                      readOnly: true,
-                      enabled: false,
-                      controller: TextEditingController(
-                        text: _totalHours != null
-                            ? TimeUtils.formatHoursToHM(_totalHours!)
-                            : '',
-                      ),
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                        contentPadding:
-                            EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              const SizedBox(height: 12),
-
-              CustomButton(
-                label: _isLoading ? 'Loading...' : 'Add Attendance',
-                widthFactor: 0.8,
-                heightFactor: 0.1,
-                onPressed: _isLoading
-                    ? null
-                    : () {
-                        showDialog(
+                    TextButton.icon(
+                      onPressed: () async {
+                        final time = await showTimePicker(
                           context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Confirm Action'),
-                            content: const Text(
-                                'Are you sure you want to submit this attendance record?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                child: Text('Cancel',
-                                    style: TextStyle(
-                                        color: Colors.red[900], fontSize: 16)),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                  _submitForm();
-                                },
-                                child: const Text(
-                                  'Confirm',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ],
-                          ),
+                          initialTime: _inTime ?? TimeOfDay.now(),
                         );
+                        if (time != null) setState(() => _inTime = time);
                       },
-              ),
-            ],
+                      icon: const Icon(Icons.access_time),
+                      label: Text(
+                        _inTime == null
+                            ? 'Select Time'
+                            : _inTime!.format(context),
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ],
+                ),
+            
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Clock out Time:',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    TextButton.icon(
+                      onPressed: () async {
+                        final time = await showTimePicker(
+                          context: context,
+                          initialTime: _outTime ?? TimeOfDay.now(),
+                        );
+                        if (time != null) setState(() => _outTime = time);
+                      },
+                      icon: const Icon(Icons.access_time),
+                      label: Text(
+                        _outTime == null
+                            ? 'Select Time'
+                            : _outTime!.format(context),
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ],
+                ),
+            
+                Row(
+                  children: [
+                    const Text(
+                      'Total Hours:',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    const Spacer(),
+                    SizedBox(
+                      width: screenWidth(context, 0.25),
+                      child: TextFormField(
+                        readOnly: true,
+                        enabled: false,
+                        controller: TextEditingController(
+                          text: _totalHours != null
+                              ? TimeUtils.formatHoursToHM(_totalHours!)
+                              : '',
+                        ),
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                          contentPadding:
+                              EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+            
+                const SizedBox(height: 12),
+            
+                const SizedBox(height: 12),
+            
+                CustomButton(
+                  label: _isLoading ? 'Loading...' : 'Add Attendance',
+                  widthFactor: 0.8,
+                  heightFactor: 0.1,
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Confirm Action'),
+                              content: const Text(
+                                  'Are you sure you want to submit this attendance record?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: Text('Cancel',
+                                      style: TextStyle(
+                                          color: Colors.red[900], fontSize: 16)),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    _submitForm();
+                                  },
+                                  child: const Text(
+                                    'Confirm',
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                ),
+              ],
+            ),
           ),
         ),
       ),

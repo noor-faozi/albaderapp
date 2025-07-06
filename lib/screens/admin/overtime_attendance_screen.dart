@@ -19,7 +19,7 @@ class _OvertimeAttendanceState extends State<OvertimeAttendanceScreen> {
     return Scaffold(
       appBar: CustomAppBar(title: "Overtime"),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(screenPadding(context, 0.03)),
         child: Column(
           children: [
             Row(
