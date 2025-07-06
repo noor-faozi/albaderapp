@@ -3,6 +3,7 @@ import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/widgets/custom_button.dart';
 import 'package:albaderapp/widgets/custom_secondary_app_bar.dart';
 import 'package:albaderapp/widgets/custom_text_form_field.dart';
+import 'package:albaderapp/widgets/form_card_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -163,162 +164,167 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
       appBar: const CustomSecondaryAppBar(title: "Holiday"),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(screenPadding(context, 0.04)),
           child: Form(
             key: _formKey,
-            child: Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(screenPadding(context, 0.05)),
-                  child: const Text(
-                    "Add New Holiday",
-                    style: TextStyle(fontSize: 20),
+            child: FormCardWrapper(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(screenPadding(context, 0.05)),
+                    child: const Text(
+                      "Add New Holiday",
+                      style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.7),
+                    ),
                   ),
-                ),
-                FormField<DateTime>(
-                  builder: (field) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Date:',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            TextButton.icon(
-                              onPressed: () async {
-                                final date = await showDatePicker(
-                                  context: context,
-                                  initialDate: _selectedDate,
-                                  firstDate: DateTime(2020),
-                                  lastDate: DateTime(2100),
-                                );
-                                if (date != null) {
-                                  setState(() {
-                                    _selectedDate = date;
-                                    field.didChange(date);
-                                  });
-                                }
-                              },
-                              icon: const Icon(Icons.calendar_today),
-                              label: Text(
-                                _selectedDate
-                                    .toLocal()
-                                    .toString()
-                                    .split(' ')[0],
-                                style: const TextStyle(fontSize: 16),
+                  FormField<DateTime>(
+                    builder: (field) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Date:',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              TextButton.icon(
+                                onPressed: () async {
+                                  final date = await showDatePicker(
+                                    context: context,
+                                    initialDate: _selectedDate,
+                                    firstDate: DateTime(2020),
+                                    lastDate: DateTime(2100),
+                                  );
+                                  if (date != null) {
+                                    setState(() {
+                                      _selectedDate = date;
+                                      field.didChange(date);
+                                    });
+                                  }
+                                },
+                                icon: const Icon(Icons.calendar_today),
+                                label: Text(
+                                  _selectedDate
+                                      .toLocal()
+                                      .toString()
+                                      .split(' ')[0],
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (field.hasError)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 4.0, top: 4.0),
+                              child: Text(
+                                field.errorText!,
+                                style:
+                                    const TextStyle(color: darkRed, fontSize: 12),
                               ),
                             ),
-                          ],
-                        ),
-                        if (field.hasError)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 4.0, top: 4.0),
-                            child: Text(
-                              field.errorText!,
-                              style:
-                                  const TextStyle(color: darkRed, fontSize: 12),
-                            ),
-                          ),
-                      ],
-                    );
-                  },
-                ),
-                SizedBox(height: screenHeight(context, 0.03)),
-                CustomTextFormField(
-                  controller: _titleController,
-                  labelText: "Holiday Title",
-                  prefixIcon: const Icon(Icons.celebration),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return "Please enter a holiday tile";
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: screenHeight(context, 0.03)),
-                CustomTextFormField(
-                  controller: _descriptionController,
-                  labelText: "Description (optional)",
-                  maxLines: 2,
-                  prefixIcon: const Icon(Icons.note),
-                ),
-                SizedBox(height: screenHeight(context, 0.03)),
-                CustomButton(
-                  label: 'Add Holiday',
-                  onPressed: _isLoading
-                      ? null
-                      : () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Confirm Action'),
-                              content: const Text(
-                                  'Are you sure you want to add this holiday?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: Text('Cancel',
-                                      style: TextStyle(
-                                        color: Colors.red[900],
-                                        fontSize: 16,
-                                      )),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    submitHoliday();
-                                  },
-                                  child: const Text(
-                                    'Confirm',
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold),
+                        ],
+                      );
+                    },
+                  ),
+                  SizedBox(height: screenHeight(context, 0.03)),
+                  CustomTextFormField(
+                    controller: _titleController,
+                    labelText: "Holiday Title",
+                    prefixIcon: const Icon(Icons.celebration),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return "Please enter a holiday tile";
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: screenHeight(context, 0.03)),
+                  CustomTextFormField(
+                    controller: _descriptionController,
+                    labelText: "Description (optional)",
+                    maxLines: 2,
+                    prefixIcon: const Icon(Icons.note),
+                  ),
+                  SizedBox(height: screenHeight(context, 0.03)),
+                  CustomButton(
+                    label: 'Add Holiday',
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Confirm Action'),
+                                content: const Text(
+                                    'Are you sure you want to add this holiday?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: Text('Cancel',
+                                        style: TextStyle(
+                                          color: Colors.red[900],
+                                          fontSize: 16,
+                                        )),
                                   ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                  widthFactor: 0.8,
-                  heightFactor: 0.1,
-                ),
-                SizedBox(height: screenHeight(context, 0.03)),
-                CustomButton(
-                  label:
-                      _isLoading ? 'Generating...' : 'Generate Friday Holidays',
-                  widthFactor: 0.8,
-                  heightFactor: 0.1,
-                  onPressed: _isLoading
-                      ? null
-                      : () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Confirm Action'),
-                              content: const Text(
-                                  'Are you sure you want to generate Friday holidays for one year?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: Text('Cancel',
-                                      style: TextStyle(color: Colors.red[900])),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    insertFridayHolidaysManually();
-                                  },
-                                  child: const Text('Confirm'),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                ),
-              ],
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      submitHoliday();
+                                    },
+                                    child: const Text(
+                                      'Confirm',
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                    widthFactor: 0.8,
+                    heightFactor: 0.1,
+                  ),
+                  SizedBox(height: screenHeight(context, 0.03)),
+                  CustomButton(
+                    label:
+                        _isLoading ? 'Generating...' : 'Generate Friday Holidays',
+                    widthFactor: 0.8,
+                    heightFactor: 0.1,
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Confirm Action'),
+                                content: const Text(
+                                    'Are you sure you want to generate Friday holidays for one year?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: Text('Cancel',
+                                        style: TextStyle(color: Colors.red[900])),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      insertFridayHolidaysManually();
+                                    },
+                                    child: const Text('Confirm'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                  ),
+                ],
+              ),
             ),
           ),
         ),

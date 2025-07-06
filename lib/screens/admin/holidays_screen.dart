@@ -187,7 +187,7 @@ class _EmployeesDataTableWidgetState extends State<HolidaysDataTableWidget> {
         ),
         child: StyledDataTable(
           child: PaginatedDataTable(
-            header: const Text('holidays'),
+            header: const Text('Holidays'),
             rowsPerPage: 7,
             columns: const [
               DataColumn(label: Text('Title')),
