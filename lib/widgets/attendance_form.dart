@@ -69,14 +69,14 @@ class _AttendanceFormState extends State<AttendanceForm> {
   void initState() {
     if (widget.attendanceRecord != null) {
       final record = widget.attendanceRecord!;
-      _employeeIdController.text = record['employee_id'] ?? '';
-      _workOrderIdController.text = record['work_order_id'] ?? '';
+      _employeeIdController.text = record['employee_id']?.toString() ?? '';
+      _workOrderIdController.text = record['work_order_id']?.toString() ?? '';
       _selectedDate = DateTime.parse(record['date']);
-      _inTime = TimeUtils.formatTime(record['in_time']) as TimeOfDay?;
-      _outTime = TimeUtils.formatTime(record['out_time']) as TimeOfDay?;
+      _inTime = TimeUtils.parseTime(record['in_time']);
+      _outTime = TimeUtils.parseTime(record['out_time']);
 
-      _fetchEmployee(); 
-      _fetchWorkOrder(); 
+      _fetchEmployee();
+      _fetchWorkOrder();
     }
 
     super.initState();
@@ -178,7 +178,6 @@ class _AttendanceFormState extends State<AttendanceForm> {
       }
     }
 
-
     final data = {
       'employee_id': employeeId,
       'date': formattedDate,
@@ -194,21 +193,27 @@ class _AttendanceFormState extends State<AttendanceForm> {
     if (widget.attendanceRecord != null) {
       final id = widget.attendanceRecord!['id'];
       await supabase.from('attendance').update(data).eq('id', id);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Attendance edited successfully.'),
+          backgroundColor: Colors.green.shade700,
+        ),
+      );
+      Navigator.pop(context);
     } else {
       await supabase.from('attendance').insert(data);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Attendance submitted'),
+          backgroundColor: Colors.green.shade700,
+        ),
+      );
     }
 
     setState(() {
       _isLoading = false;
     });
     _resetForm();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Attendance submitted'),
-        backgroundColor: Colors.green.shade700,
-      ),
-    );
   }
 
   @override
@@ -224,14 +229,18 @@ class _AttendanceFormState extends State<AttendanceForm> {
           child: FormCardWrapper(
             child: Column(
               children: [
-                const Center(
-                    child: Text(
-                  "Attendance Form",
-                  style: TextStyle(
+                Center(
+                  child: Text(
+                    widget.attendanceRecord != null
+                        ? "Edit Attendance"
+                        : "Attendance Form",
+                    style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w500,
-                      letterSpacing: 0.7),
-                )),
+                      letterSpacing: 0.7,
+                    ),
+                  ),
+                ),
                 SizedBox(height: screenHeight(context, 0.025)),
                 DatePickerFormField(
                   selectedDate: _selectedDate,
@@ -251,6 +260,7 @@ class _AttendanceFormState extends State<AttendanceForm> {
                 // Employee:
                 SearchAndDisplayCard<Map<String, dynamic>>(
                   controller: _employeeIdController,
+                  readOnly: widget.attendanceRecord != null,
                   exactDigits: 3,
                   label: 'Employee Code',
                   onSearch: _fetchEmployee,

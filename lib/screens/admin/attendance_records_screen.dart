@@ -1,6 +1,8 @@
+import 'package:albaderapp/screens/admin/edit_attendance_screen.dart';
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/utils/time_utils.dart';
+import 'package:albaderapp/widgets/attendance_form.dart';
 import 'package:albaderapp/widgets/custom_app_bar.dart';
 import 'package:albaderapp/widgets/styled_date_table.dart';
 import 'package:flutter/material.dart';
@@ -100,7 +102,16 @@ class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
                       OvertimeDataTableWidget(
                         attendance: attendance,
                         onEdit: (atd) {
-                          // navigate to edit screen
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EditAttendanceScreen(
+                                attendanceRecord:
+                                    atd, // <- pass full record map
+                              ),
+                            ),
+                          );
+                          _refreshData();
                         },
                         onDelete: (atd) async {
                           final confirm = await showDialog<bool>(
