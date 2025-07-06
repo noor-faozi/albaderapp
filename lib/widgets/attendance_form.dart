@@ -5,6 +5,7 @@ import 'package:albaderapp/widgets/custom_button.dart';
 import 'package:albaderapp/widgets/date_picker_form_field.dart';
 import 'package:albaderapp/widgets/form_card_wrapper.dart';
 import 'package:albaderapp/widgets/search_and_display_card.dart';
+import 'package:albaderapp/widgets/time_picker_row.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -212,9 +213,9 @@ class _AttendanceFormState extends State<AttendanceForm> {
                     return null;
                   },
                 ),
-            
+
                 SizedBox(height: screenHeight(context, 0.025)),
-            
+
                 // Employee:
                 SearchAndDisplayCard<Map<String, dynamic>>(
                   controller: _employeeIdController,
@@ -231,9 +232,10 @@ class _AttendanceFormState extends State<AttendanceForm> {
                     children: [
                       Text(
                         "Employee Details",
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       const SizedBox(height: 8),
                       Text("Employee Code: ${employee['id']}"),
@@ -242,9 +244,9 @@ class _AttendanceFormState extends State<AttendanceForm> {
                     ],
                   ),
                 ),
-            
+
                 SizedBox(height: screenHeight(context, 0.025)),
-            
+
                 // Work Order:
                 SearchAndDisplayCard<Map<String, dynamic>>(
                   controller: _workOrderIdController,
@@ -261,9 +263,10 @@ class _AttendanceFormState extends State<AttendanceForm> {
                     children: [
                       Text(
                         "Work Order Details",
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       const SizedBox(height: 8),
                       Text("Work Order Code: ${workOrder['id']}"),
@@ -271,61 +274,21 @@ class _AttendanceFormState extends State<AttendanceForm> {
                     ],
                   ),
                 ),
-            
+
                 SizedBox(height: screenHeight(context, 0.025)),
-            
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Clock in Time:',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    TextButton.icon(
-                      onPressed: () async {
-                        final time = await showTimePicker(
-                          context: context,
-                          initialTime: _inTime ?? TimeOfDay.now(),
-                        );
-                        if (time != null) setState(() => _inTime = time);
-                      },
-                      icon: const Icon(Icons.access_time),
-                      label: Text(
-                        _inTime == null
-                            ? 'Select Time'
-                            : _inTime!.format(context),
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ],
+
+                TimePickerRow(
+                  label: 'Clock In Time:',
+                  time: _inTime,
+                  onTimePicked: (picked) => setState(() => _inTime = picked),
                 ),
-            
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Clock out Time:',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    TextButton.icon(
-                      onPressed: () async {
-                        final time = await showTimePicker(
-                          context: context,
-                          initialTime: _outTime ?? TimeOfDay.now(),
-                        );
-                        if (time != null) setState(() => _outTime = time);
-                      },
-                      icon: const Icon(Icons.access_time),
-                      label: Text(
-                        _outTime == null
-                            ? 'Select Time'
-                            : _outTime!.format(context),
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ],
+
+                TimePickerRow(
+                  label: 'Clock Out Time:',
+                  time: _outTime,
+                  onTimePicked: (picked) => setState(() => _outTime = picked),
                 ),
-            
+
                 Row(
                   children: [
                     const Text(
@@ -346,18 +309,18 @@ class _AttendanceFormState extends State<AttendanceForm> {
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
                           isDense: true,
-                          contentPadding:
-                              EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                          contentPadding: EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 12),
                         ),
                       ),
                     ),
                   ],
                 ),
-            
+
                 const SizedBox(height: 12),
-            
+
                 const SizedBox(height: 12),
-            
+
                 CustomButton(
                   label: _isLoading ? 'Loading...' : 'Add Attendance',
                   widthFactor: 0.8,
@@ -376,7 +339,8 @@ class _AttendanceFormState extends State<AttendanceForm> {
                                   onPressed: () => Navigator.of(context).pop(),
                                   child: Text('Cancel',
                                       style: TextStyle(
-                                          color: Colors.red[900], fontSize: 16)),
+                                          color: Colors.red[900],
+                                          fontSize: 16)),
                                 ),
                                 TextButton(
                                   onPressed: () {

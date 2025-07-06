@@ -5,6 +5,7 @@ import 'package:albaderapp/widgets/custom_button.dart';
 import 'package:albaderapp/widgets/date_picker_form_field.dart';
 import 'package:albaderapp/widgets/form_card_wrapper.dart';
 import 'package:albaderapp/widgets/search_and_display_card.dart';
+import 'package:albaderapp/widgets/time_picker_row.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -300,56 +301,16 @@ class _OvertimeFormState extends State<OvertimeForm> {
 
                 SizedBox(height: screenHeight(context, 0.025)),
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Clock in Time:',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    TextButton.icon(
-                      onPressed: () async {
-                        final time = await showTimePicker(
-                          context: context,
-                          initialTime: _inTime ?? TimeOfDay.now(),
-                        );
-                        if (time != null) setState(() => _inTime = time);
-                      },
-                      icon: const Icon(Icons.access_time),
-                      label: Text(
-                        _inTime == null
-                            ? 'Select Time'
-                            : _inTime!.format(context),
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ],
+                TimePickerRow(
+                  label: 'Clock In Time:',
+                  time: _inTime,
+                  onTimePicked: (picked) => setState(() => _inTime = picked),
                 ),
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Clock out Time:',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    TextButton.icon(
-                      onPressed: () async {
-                        final time = await showTimePicker(
-                          context: context,
-                          initialTime: _outTime ?? TimeOfDay.now(),
-                        );
-                        if (time != null) setState(() => _outTime = time);
-                      },
-                      icon: const Icon(Icons.access_time),
-                      label: Text(
-                        _outTime == null
-                            ? 'Select Time'
-                            : _outTime!.format(context),
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ],
+                TimePickerRow(
+                  label: 'Clock Out Time:',
+                  time: _outTime,
+                  onTimePicked: (picked) => setState(() => _outTime = picked),
                 ),
 
                 Row(
