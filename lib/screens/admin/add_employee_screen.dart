@@ -5,6 +5,7 @@ import 'package:albaderapp/widgets/custom_button.dart';
 import 'package:albaderapp/widgets/custom_text_form_field.dart';
 import 'package:albaderapp/widgets/custom_secondary_app_bar.dart';
 import 'package:albaderapp/widgets/form_card_wrapper.dart';
+import 'package:albaderapp/widgets/show_confirm_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -191,7 +192,12 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                   SizedBox(height: screenHeight(context, 0.035)),
                   CustomButton(
                     label: _isLoading ? 'Loading...' : "Add Employee",
-                    onPressed: _isLoading ? null : _handleCreateEmployee,
+                    onPressed: _isLoading ? null : () async {
+                          if (await showConfirmDialog(context,
+                              'Are you sure you want to submit this record?')) {
+                            _handleCreateEmployee();
+                          }
+                        },
                     widthFactor: 0.8,
                     heightFactor: 0.1,
                   ),
