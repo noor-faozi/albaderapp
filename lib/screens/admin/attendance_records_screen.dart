@@ -149,7 +149,6 @@ class AttendanceDataTable extends DataTableSource {
           ? TimeUtils.formatHoursToHM(atd['total_hours'])
           : '')),
       DataCell(Text('${(atd['amount'] ?? 0).toStringAsFixed(4)} AED')),
-      DataCell(Text(isHoliday ? 'Holiday' : 'Normal')),
       DataCell(Text(atd['created_by_name'] ?? '')),
       DataCell(Row(
         children: [
@@ -240,8 +239,7 @@ class _AttendanceDataTableWidgetState extends State<OvertimeDataTableWidget> {
               DataColumn(label: Text('Out Time')),
               DataColumn(label: Text('Total Hours')),
               DataColumn(label: Text('Amount')),
-              DataColumn(label: Text('Type')),
-              DataColumn(label: Text('Submitted By')),
+              DataColumn(label: Text('Supervisor')),
               DataColumn(label: Text('Action')),
             ],
             source: _data,
