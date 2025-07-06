@@ -1,35 +1,35 @@
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
+import 'package:albaderapp/utils/time_utils.dart';
 import 'package:albaderapp/widgets/custom_app_bar.dart';
 import 'package:albaderapp/widgets/styled_date_table.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:albaderapp/utils/time_utils.dart';
 
-class OvertimeRecordsScreen extends StatefulWidget {
-  const OvertimeRecordsScreen({super.key});
+class AttendanceRecordsScreen extends StatefulWidget {
+  const AttendanceRecordsScreen({super.key});
 
   @override
-  State<OvertimeRecordsScreen> createState() => _OvertimeRecordsScreenState();
+  State<AttendanceRecordsScreen> createState() =>
+      _AttendanceRecordsScreenState();
 }
 
-class _OvertimeRecordsScreenState extends State<OvertimeRecordsScreen> {
+class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
   final supabase = Supabase.instance.client;
 
   String searchQuery = '';
-
   @override
   Widget build(BuildContext context) {
     // Stream with optional filter
-    final Stream<List<Map<String, dynamic>>> overtimeStream = supabase
-        .from('overtime_with_employee')
+    final Stream<List<Map<String, dynamic>>> attendanceStream = supabase
+        .from('attendance_with_employee')
         .stream(primaryKey: ['id'])
         .order('date')
         .map((event) {
           return (event as List).cast<Map<String, dynamic>>();
         });
     return Scaffold(
-      appBar: CustomAppBar(title: 'Overtime Records'),
+      appBar: CustomAppBar(title: "Attendance Records"),
       body: Column(
         children: [
           Padding(
@@ -50,7 +50,7 @@ class _OvertimeRecordsScreenState extends State<OvertimeRecordsScreen> {
           ),
           Expanded(
             child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: overtimeStream,
+              stream: attendanceStream,
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
@@ -60,31 +60,32 @@ class _OvertimeRecordsScreenState extends State<OvertimeRecordsScreen> {
                       child: CircularProgressIndicator(color: firstColor));
                 }
 
-                // Filter overtime by search query (employee ID)
-                List<Map<String, dynamic>> overtime = snapshot.data!;
+                // Filter attendance by search query (employee ID)
+                List<Map<String, dynamic>> attendance = snapshot.data!;
 
                 if (searchQuery.isNotEmpty) {
                   final id = int.tryParse(searchQuery);
                   if (id != null) {
-                    overtime =
-                        overtime.where((e) => e['employee_id'] == id).toList();
+                    attendance = attendance
+                        .where((e) => e['employee_id'] == id)
+                        .toList();
                   } else {
-                    overtime = [];
+                    attendance = [];
                   }
                 }
 
                 return OvertimeDataTableWidget(
-                  overtime: overtime,
-                  onEdit: (ovt) {
+                  attendance: attendance,
+                  onEdit: (atd) {
                     // navigate to edit screen
                   },
-                  onDelete: (ovt) async {
+                  onDelete: (atd) async {
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (ctx) => AlertDialog(
                         title: const Text('Confirm Deletion'),
                         content: const Text(
-                            'Are you sure you want to delete this overtime?'),
+                            'Are you sure you want to delete this attendance?'),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(ctx, false),
@@ -101,9 +102,9 @@ class _OvertimeRecordsScreenState extends State<OvertimeRecordsScreen> {
 
                     if (confirm == true) {
                       await supabase
-                          .from('overtime')
+                          .from('attendance')
                           .delete()
-                          .eq('id', ovt['id']);
+                          .eq('id', atd['id']);
                     }
                   },
                 );
@@ -117,49 +118,47 @@ class _OvertimeRecordsScreenState extends State<OvertimeRecordsScreen> {
 }
 
 // DataTableSource implementation for paginated data table
-class OvertimeDataTable extends DataTableSource {
-  final List<Map<String, dynamic>> overtime;
+class AttendanceDataTable extends DataTableSource {
+  final List<Map<String, dynamic>> attendance;
   final void Function(Map<String, dynamic>) onEdit;
   final void Function(Map<String, dynamic>) onDelete;
 
-  OvertimeDataTable({
-    required this.overtime,
+  AttendanceDataTable({
+    required this.attendance,
     required this.onEdit,
     required this.onDelete,
   });
 
   @override
   DataRow? getRow(int index) {
-    if (index >= overtime.length) return null;
+    if (index >= attendance.length) return null;
 
-    final ovt = overtime[index];
-    final isHoliday = ovt['holiday_id'] != null;
+    final atd = attendance[index];
+    final isHoliday = atd['holiday_id'] != null;
 
     final rowColor = index % 2 == 0 ? Colors.white : Colors.grey[100];
     return DataRow(color: WidgetStateProperty.all(rowColor), cells: [
-      DataCell(Text(ovt['employee_id'].toString())),
-      DataCell(Text(ovt['employee_name'] ?? '')),
-      DataCell(Text(ovt['profession'] ?? '')),
-      DataCell(Text(ovt['date']?.toString().split('T').first ?? '')),
-      DataCell(Text(ovt['work_order_id'] ?? '')),
-      DataCell(Text(TimeUtils.formatTime(ovt['in_time']))),
-      DataCell(Text(TimeUtils.formatTime(ovt['out_time']))),
-      DataCell(Text(ovt['total_hours'] != null
-          ? TimeUtils.formatHoursToHM(ovt['total_hours'])
+      DataCell(Text(atd['employee_id'].toString())),
+      DataCell(Text(atd['employee_name'] ?? '')),
+      DataCell(Text(atd['profession'] ?? '')),
+      DataCell(Text(atd['date']?.toString().split('T').first ?? '')),
+      DataCell(Text(atd['work_order_id'] ?? '')),
+      DataCell(Text(TimeUtils.formatTime(atd['in_time']))),
+      DataCell(Text(TimeUtils.formatTime(atd['out_time']))),
+      DataCell(Text(atd['total_hours'] != null
+          ? TimeUtils.formatHoursToHM(atd['total_hours'])
           : '')),
-      DataCell(Text('${(ovt['amount'] ?? 0).toStringAsFixed(4)} AED')),
-      DataCell(Text(isHoliday ? 'Holiday' : 'Normal')),
-      DataCell(Text(ovt['created_by_name'] ?? '')),
-      DataCell(Text(ovt['approved_by_name'] ?? '')),
+      DataCell(Text('${(atd['amount'] ?? 0).toStringAsFixed(4)} AED')),
+      DataCell(Text(atd['created_by_name'] ?? '')),
       DataCell(Row(
         children: [
           IconButton(
             icon: const Icon(Icons.edit_rounded, color: gray500),
-            onPressed: () => onEdit(ovt),
+            onPressed: () => onEdit(atd),
           ),
           IconButton(
             icon: const Icon(Icons.delete_rounded, color: gray500),
-            onPressed: () => onDelete(ovt),
+            onPressed: () => onDelete(atd),
           ),
         ],
       )),
@@ -170,37 +169,37 @@ class OvertimeDataTable extends DataTableSource {
   bool get isRowCountApproximate => false;
 
   @override
-  int get rowCount => overtime.length;
+  int get rowCount => attendance.length;
 
   @override
   int get selectedRowCount => 0;
 }
 
 class OvertimeDataTableWidget extends StatefulWidget {
-  final List<Map<String, dynamic>> overtime;
+  final List<Map<String, dynamic>> attendance;
   final void Function(Map<String, dynamic>) onEdit;
   final void Function(Map<String, dynamic>) onDelete;
 
   const OvertimeDataTableWidget({
     super.key,
-    required this.overtime,
+    required this.attendance,
     required this.onEdit,
     required this.onDelete,
   });
 
   @override
   State<OvertimeDataTableWidget> createState() =>
-      _OvertimeDataTableWidgetState();
+      _AttendanceDataTableWidgetState();
 }
 
-class _OvertimeDataTableWidgetState extends State<OvertimeDataTableWidget> {
-  late OvertimeDataTable _data;
+class _AttendanceDataTableWidgetState extends State<OvertimeDataTableWidget> {
+  late AttendanceDataTable _data;
 
   @override
   void initState() {
     super.initState();
-    _data = OvertimeDataTable(
-      overtime: widget.overtime,
+    _data = AttendanceDataTable(
+      attendance: widget.attendance,
       onEdit: widget.onEdit,
       onDelete: widget.onDelete,
     );
@@ -209,9 +208,9 @@ class _OvertimeDataTableWidgetState extends State<OvertimeDataTableWidget> {
   @override
   void didUpdateWidget(covariant OvertimeDataTableWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.overtime != widget.overtime) {
-      _data = OvertimeDataTable(
-        overtime: widget.overtime,
+    if (oldWidget.attendance != widget.attendance) {
+      _data = AttendanceDataTable(
+        attendance: widget.attendance,
         onEdit: widget.onEdit,
         onDelete: widget.onDelete,
       );
@@ -228,7 +227,7 @@ class _OvertimeDataTableWidgetState extends State<OvertimeDataTableWidget> {
         ),
         child: StyledDataTable(
           child: PaginatedDataTable(
-            header: const Text('Overtime Records'),
+            header: const Text('attendance Records'),
             rowsPerPage: 7,
             columns: const [
               DataColumn(label: Text('Employee ID')),
@@ -240,9 +239,7 @@ class _OvertimeDataTableWidgetState extends State<OvertimeDataTableWidget> {
               DataColumn(label: Text('Out Time')),
               DataColumn(label: Text('Total Hours')),
               DataColumn(label: Text('Amount')),
-              DataColumn(label: Text('Type')),
               DataColumn(label: Text('Supervisor')),
-              DataColumn(label: Text('Manager')),
               DataColumn(label: Text('Action')),
             ],
             source: _data,
