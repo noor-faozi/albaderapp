@@ -5,6 +5,7 @@ import 'package:albaderapp/widgets/custom_secondary_app_bar.dart';
 import 'package:albaderapp/widgets/custom_text_form_field.dart';
 import 'package:albaderapp/widgets/date_picker_form_field.dart';
 import 'package:albaderapp/widgets/form_card_wrapper.dart';
+import 'package:albaderapp/widgets/show_confirm_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -211,38 +212,11 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
                     label: 'Add Holiday',
                     onPressed: _isLoading
                         ? null
-                        : () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Confirm Action'),
-                                content: const Text(
-                                    'Are you sure you want to add this holiday?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(),
-                                    child: Text('Cancel',
-                                        style: TextStyle(
-                                          color: Colors.red[900],
-                                          fontSize: 16,
-                                        )),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                      submitHoliday();
-                                    },
-                                    child: const Text(
-                                      'Confirm',
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
+                        : () async {
+                            if (await showConfirmDialog(context,
+                                'Are you sure you want to submit this record?')) {
+                              submitHoliday();
+                            }
                           },
                     widthFactor: 0.8,
                     heightFactor: 0.1,
