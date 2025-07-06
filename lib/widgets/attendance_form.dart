@@ -136,6 +136,14 @@ class _AttendanceFormState extends State<AttendanceForm> {
     final employeeId = _employee!['id'];
     final formattedDate = _selectedDate.toIso8601String().split('T').first;
 
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User not logged in')),
+      );
+      return;
+    }
+
     //Check for existing attendance for this employee on this date
     final existing = await supabase
         .from('attendance')
@@ -164,6 +172,7 @@ class _AttendanceFormState extends State<AttendanceForm> {
       'out_time':
           '${_outTime!.hour.toString().padLeft(2, '0')}:${_outTime!.minute.toString().padLeft(2, '0')}',
       'total_hours': _totalHours,
+      'created_by': user.id,
     };
 
     await supabase.from('attendance').insert(data);

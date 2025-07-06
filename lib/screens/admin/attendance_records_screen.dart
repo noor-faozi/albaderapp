@@ -18,16 +18,28 @@ class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
   final supabase = Supabase.instance.client;
 
   String searchQuery = '';
+  late Future<List<Map<String, dynamic>>> _attendanceFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _attendanceFuture = fetchAttendanceData();
+  }
+
+  Future<List<Map<String, dynamic>>> fetchAttendanceData() async {
+    final result =
+        await supabase.from('attendance_with_employee').select().order('date');
+    return List<Map<String, dynamic>>.from(result);
+  }
+
+  Future<void> _refreshData() async {
+    setState(() {
+      _attendanceFuture = fetchAttendanceData();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Stream with optional filter
-    final Stream<List<Map<String, dynamic>>> attendanceStream = supabase
-        .from('attendance_with_employee')
-        .stream(primaryKey: ['id'])
-        .order('date')
-        .map((event) {
-          return (event as List).cast<Map<String, dynamic>>();
-        });
     return Scaffold(
       appBar: CustomAppBar(title: "Attendance Records"),
       body: Column(
@@ -49,66 +61,88 @@ class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
             ),
           ),
           Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: attendanceStream,
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-                if (!snapshot.hasData) {
-                  return const Center(
-                      child: CircularProgressIndicator(color: firstColor));
-                }
-
-                // Filter attendance by search query (employee ID)
-                List<Map<String, dynamic>> attendance = snapshot.data!;
-
-                if (searchQuery.isNotEmpty) {
-                  final id = int.tryParse(searchQuery);
-                  if (id != null) {
-                    attendance = attendance
-                        .where((e) => e['employee_id'] == id)
-                        .toList();
-                  } else {
-                    attendance = [];
-                  }
-                }
-
-                return OvertimeDataTableWidget(
-                  attendance: attendance,
-                  onEdit: (atd) {
-                    // navigate to edit screen
-                  },
-                  onDelete: (atd) async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text('Confirm Deletion'),
-                        content: const Text(
-                            'Are you sure you want to delete this attendance?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx, false),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx, true),
-                            child: const Text('Delete',
-                                style: TextStyle(color: Colors.red)),
-                          ),
-                        ],
-                      ),
+            child: RefreshIndicator(
+              onRefresh: _refreshData,
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: _attendanceFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return ListView(
+                      children: [
+                        const SizedBox(height: 100),
+                        Center(child: Text('Error: ${snapshot.error}')),
+                      ],
                     );
+                  }
+                  if (!snapshot.hasData) {
+                    return const Center(
+                      child: CircularProgressIndicator(color: firstColor),
+                    );
+                  }
 
-                    if (confirm == true) {
-                      await supabase
-                          .from('attendance')
-                          .delete()
-                          .eq('id', atd['id']);
+                  List<Map<String, dynamic>> attendance = snapshot.data!;
+
+                  if (searchQuery.isNotEmpty) {
+                    final id = int.tryParse(searchQuery);
+                    if (id != null) {
+                      attendance = attendance
+                          .where((e) => e['employee_id'] == id)
+                          .toList();
+                    } else {
+                      attendance = [];
                     }
-                  },
-                );
-              },
+                  }
+
+                  return ListView(
+                    physics:
+                        const AlwaysScrollableScrollPhysics(), // needed for refresh to work
+                    children: [
+                      OvertimeDataTableWidget(
+                        attendance: attendance,
+                        onEdit: (atd) {
+                          // navigate to edit screen
+                        },
+                        onDelete: (atd) async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Confirm Deletion'),
+                              content: const Text(
+                                  'Are you sure you want to delete this attendance?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, false),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  child: const Text('Delete',
+                                      style: TextStyle(color: Colors.red)),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (confirm == true) {
+                            await supabase
+                                .from('attendance')
+                                .delete()
+                                .eq('id', atd['id']);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text(
+                                    'attendance record deleted successfully!'),
+                                backgroundColor: Colors.green.shade700,
+                              ),
+                            );
+                            _refreshData();
+                          }
+                        },
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -116,6 +150,7 @@ class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
     );
   }
 }
+
 
 // DataTableSource implementation for paginated data table
 class AttendanceDataTable extends DataTableSource {
