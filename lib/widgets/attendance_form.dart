@@ -12,10 +12,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AttendanceForm extends StatefulWidget {
   final void Function()? onSubmitSuccess;
+  final Map<String, dynamic>? attendanceRecord; // For editing
 
   const AttendanceForm({
     super.key,
     this.onSubmitSuccess,
+    this.attendanceRecord,
   });
 
   @override
@@ -65,6 +67,18 @@ class _AttendanceFormState extends State<AttendanceForm> {
 
   @override
   void initState() {
+    if (widget.attendanceRecord != null) {
+      final record = widget.attendanceRecord!;
+      _employeeIdController.text = record['employee_id'] ?? '';
+      _workOrderIdController.text = record['work_order_id'] ?? '';
+      _selectedDate = DateTime.parse(record['date']);
+      _inTime = TimeUtils.formatTime(record['in_time']) as TimeOfDay?;
+      _outTime = TimeUtils.formatTime(record['out_time']) as TimeOfDay?;
+
+      _fetchEmployee(); 
+      _fetchWorkOrder(); 
+    }
+
     super.initState();
   }
 
@@ -144,24 +158,26 @@ class _AttendanceFormState extends State<AttendanceForm> {
       return;
     }
 
-    //Check for existing attendance for this employee on this date
-    final existing = await supabase
-        .from('attendance')
-        .select()
-        .eq('employee_id', employeeId)
-        .eq('date', formattedDate)
-        .maybeSingle();
+    //Check for existing attendance for this employee on this date when creating new record
+    if (widget.attendanceRecord == null) {
+      final existing = await supabase
+          .from('attendance')
+          .select()
+          .eq('employee_id', employeeId)
+          .eq('date', formattedDate)
+          .maybeSingle();
 
-    if (existing != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-              'Attendance already submitted for this employee on this date'),
-          backgroundColor: Colors.red.shade700,
-        ),
-      );
-      return;
+      if (existing != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Attendance already exists for this date.'),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+        return;
+      }
     }
+
 
     final data = {
       'employee_id': employeeId,
@@ -175,7 +191,13 @@ class _AttendanceFormState extends State<AttendanceForm> {
       'created_by': user.id,
     };
 
-    await supabase.from('attendance').insert(data);
+    if (widget.attendanceRecord != null) {
+      final id = widget.attendanceRecord!['id'];
+      await supabase.from('attendance').update(data).eq('id', id);
+    } else {
+      await supabase.from('attendance').insert(data);
+    }
+
     setState(() {
       _isLoading = false;
     });
@@ -332,7 +354,11 @@ class _AttendanceFormState extends State<AttendanceForm> {
                 const SizedBox(height: 12),
 
                 CustomButton(
-                  label: _isLoading ? 'Loading...' : 'Add Attendance',
+                  label: _isLoading
+                      ? 'Loading...'
+                      : widget.attendanceRecord != null
+                          ? 'Update Attendance'
+                          : 'Add Attendance',
                   widthFactor: 0.8,
                   heightFactor: 0.1,
                   onPressed: _isLoading
