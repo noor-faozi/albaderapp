@@ -10,7 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddHolidayScreen extends StatefulWidget {
-  const AddHolidayScreen({super.key});
+  final Map<String, dynamic>? holidayRecord; // For editing
+  const AddHolidayScreen({super.key, this.holidayRecord});
 
   @override
   State<AddHolidayScreen> createState() => _AddHolidayScreenState();
@@ -27,6 +28,11 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
   @override
   void initState() {
     super.initState();
+
+    if (widget.holidayRecord != null) {
+      _titleController.text = widget.holidayRecord!['title'];
+      _descriptionController.text = widget.holidayRecord!['description'];
+    }
   }
 
   @override
@@ -110,46 +116,63 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
     final supabase = Supabase.instance.client;
     final createdBy = supabase.auth.currentUser?.id;
     final formattedDate = _selectedDate.toIso8601String().substring(0, 10);
+    final isEditMode = widget.holidayRecord != null;
 
     try {
-      // Check if the date already exists
-      final existing = await supabase
-          .from('holidays')
-          .select()
-          .eq('date', formattedDate)
-          .limit(1)
-          .maybeSingle();
+      if (isEditMode) {
+        // Update existing holiday
+        final holidayId = widget.holidayRecord!['id'];
 
-      if (existing != null) {
+        await supabase.from('holidays').update({
+          'title': _titleController.text.trim(),
+          'description': _descriptionController.text.trim(),
+        }).eq('id', holidayId);
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('A holiday already exists on that date.'),
-            backgroundColor: Colors.red.shade700,
+            content: const Text('Holiday updated successfully!'),
+            backgroundColor: Colors.green.shade700,
           ),
         );
-        return;
+      } else {
+        // Check if the date already exists
+        final existing = await supabase
+            .from('holidays')
+            .select()
+            .eq('date', formattedDate)
+            .limit(1)
+            .maybeSingle();
+
+        if (existing != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('A holiday already exists on that date.'),
+              backgroundColor: Colors.red.shade700,
+            ),
+          );
+          return;
+        }
+
+        // Insert new holiday
+        await supabase.from('holidays').insert({
+          'date': formattedDate,
+          'title': _titleController.text.trim(),
+          'description': _descriptionController.text.trim(),
+          'created_by': createdBy,
+          'is_recurring': false,
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Holiday saved successfully!'),
+            backgroundColor: Colors.green.shade700,
+          ),
+        );
       }
 
-      // Insert the new holiday
-      await supabase.from('holidays').insert({
-        'date': formattedDate,
-        'title': _titleController.text.trim(),
-        'description': _descriptionController.text.trim(),
-        'created_by': createdBy,
-        'is_recurring': false,
-      });
-
-      // Success feedback
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Holiday saved successfully!'),
-          backgroundColor: Colors.green.shade700,
-        ),
-      );
       Navigator.of(context).pop();
     } catch (e) {
-      // Error feedback
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -163,7 +186,9 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomSecondaryAppBar(title: "Holiday"),
+      appBar: widget.holidayRecord == null
+          ? const CustomSecondaryAppBar(title: "Add Holiday")
+          : null,
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.all(screenPadding(context, 0.04)),
@@ -187,6 +212,7 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
                     onChanged: (newDate) {
                       setState(() => _selectedDate = newDate);
                     },
+                    enabled: widget.holidayRecord == null,
                   ),
                   SizedBox(height: screenHeight(context, 0.03)),
                   CustomTextFormField(
@@ -209,7 +235,9 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
                   ),
                   SizedBox(height: screenHeight(context, 0.03)),
                   CustomButton(
-                    label: 'Add Holiday',
+                    label: widget.holidayRecord != null
+                        ? 'Update Holiday'
+                        : 'Add Holiday',
                     onPressed: _isLoading
                         ? null
                         : () async {
@@ -222,41 +250,42 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
                     heightFactor: 0.1,
                   ),
                   SizedBox(height: screenHeight(context, 0.03)),
-                  CustomButton(
-                    label: _isLoading
-                        ? 'Generating...'
-                        : 'Generate Friday Holidays',
-                    widthFactor: 0.8,
-                    heightFactor: 0.1,
-                    onPressed: _isLoading
-                        ? null
-                        : () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Confirm Action'),
-                                content: const Text(
-                                    'Are you sure you want to generate Friday holidays for one year?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(),
-                                    child: Text('Cancel',
-                                        style:
-                                            TextStyle(color: Colors.red[900])),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                      insertFridayHolidaysManually();
-                                    },
-                                    child: const Text('Confirm'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                  ),
+                  if (widget.holidayRecord == null)
+                    CustomButton(
+                      label: _isLoading
+                          ? 'Generating...'
+                          : 'Generate Friday Holidays',
+                      widthFactor: 0.8,
+                      heightFactor: 0.1,
+                      onPressed: _isLoading
+                          ? null
+                          : () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Confirm Action'),
+                                  content: const Text(
+                                      'Are you sure you want to generate Friday holidays for one year?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(),
+                                      child: Text('Cancel',
+                                          style: TextStyle(
+                                              color: Colors.red[900])),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                        insertFridayHolidaysManually();
+                                      },
+                                      child: const Text('Confirm'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                    ),
                 ],
               ),
             ),

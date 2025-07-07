@@ -1,4 +1,5 @@
 import 'package:albaderapp/screens/add_holiday_screen.dart';
+import 'package:albaderapp/screens/admin/edit_holiday_screen.dart';
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/widgets/custom_app_bar.dart';
@@ -64,10 +65,49 @@ class _HolidaysState extends State<HolidaysScreen> {
                 return HolidaysDataTableWidget(
                   holidays: holidays,
                   onEdit: (holiday) {
-                    // navigate to edit screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditHolidayScreen(
+                          holidayRecord: holiday,
+                        ),
+                      ),
+                    );
                   },
-                  onDelete: (holiday) {
+                  onDelete: (holiday) async {
                     // show delete confirmation
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Confirm Deletion'),
+                        content: const Text(
+                            'Are you sure you want to delete this holiday?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: const Text('Delete',
+                                style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true) {
+                      await supabase
+                          .from('holidays')
+                          .delete()
+                          .eq('id', holiday['id']);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Holiday deleted successfully.'),
+                          backgroundColor: Colors.green.shade700,
+                        ),
+                      );
+                    }
                   },
                 );
               },
@@ -107,6 +147,10 @@ class HolidaysDataTable extends DataTableSource {
 
     final holiday = holidays[index];
     final rowColor = index % 2 == 0 ? Colors.white : Colors.grey[100];
+
+    final holidayDate = DateTime.parse(holiday['date']);
+    final isFutureHoliday = holidayDate.isAfter(DateTime.now());
+
     return DataRow(color: WidgetStateProperty.all(rowColor), cells: [
       DataCell(Text(holiday['title'] ?? '')),
       DataCell(Text(holiday['date'] ?? '')),
@@ -116,10 +160,11 @@ class HolidaysDataTable extends DataTableSource {
             icon: const Icon(Icons.edit_rounded, color: gray500),
             onPressed: () => onEdit(holiday),
           ),
-          IconButton(
-            icon: const Icon(Icons.delete_rounded, color: gray500),
-            onPressed: () => onDelete(holiday),
-          ),
+          if (isFutureHoliday)
+            IconButton(
+              icon: const Icon(Icons.delete_rounded, color: gray500),
+              onPressed: () => onDelete(holiday),
+            ),
         ],
       )),
     ]);
