@@ -118,7 +118,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
 
     if (selectedDateOnly.isAfter(today)) {
       setState(() {
-        _dateError = 'Date cannot be in the future';
+        _dateError = 'Date cannot be in the future.';
       });
       return;
     } else {
@@ -130,7 +130,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
     if (_totalHours == null || _totalHours! <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Total hours must be greater than 0'),
+          content: const Text('Total hours must be greater than 0.'),
           backgroundColor: Colors.red.shade700,
         ),
       );
@@ -143,7 +143,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
         _workOrder == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please complete all fields'),
+          content: const Text('Please complete all fields.'),
           backgroundColor: Colors.red.shade700,
         ),
       );
@@ -174,7 +174,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text(
-              'Attendance already submitted for this employee on this date',
+              'Overtime already submitted for this employee on this date.',
             ),
             backgroundColor: Colors.red.shade700,
           ),
@@ -212,16 +212,17 @@ class _OvertimeFormState extends State<OvertimeForm> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Overtime updated successfully'),
+          content: const Text('Overtime updated successfully.'),
           backgroundColor: Colors.green.shade700,
         ),
       );
+      Navigator.pop(context);
     } else {
       await supabase.from('overtime').insert(data);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Overtime submitted successfully'),
+          content: const Text('Overtime submitted successfully.'),
           backgroundColor: Colors.green.shade700,
         ),
       );
@@ -275,6 +276,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
                 // Employee:
                 SearchAndDisplayCard<Map<String, dynamic>>(
                   controller: _employeeIdController,
+                  readOnly: widget.overtimeRecord != null,
                   exactDigits: 3,
                   label: 'Employee Code',
                   onSearch: _fetchEmployee,

@@ -1,6 +1,8 @@
+import 'package:albaderapp/screens/admin/edit_overtime_screen.dart';
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/widgets/custom_app_bar.dart';
+import 'package:albaderapp/widgets/custom_secondary_app_bar.dart';
 import 'package:albaderapp/widgets/styled_date_table.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -40,7 +42,7 @@ class _OvertimeRecordsScreenState extends State<OvertimeRecordsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: 'Overtime Records'),
+      appBar: const CustomSecondaryAppBar(title: 'Overtime Records'),
       body: Column(
         children: [
           Padding(
@@ -93,7 +95,16 @@ class _OvertimeRecordsScreenState extends State<OvertimeRecordsScreen> {
                         OvertimeDataTableWidget(
                           overtime: overtime,
                           onEdit: (ovt) {
-                            // navigate to edit screen
+                            Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EditOvertimeScreen(
+                                overtimeRecord:
+                                    ovt, 
+                              ),
+                            ),
+                          );
+                          _refreshData();
                           },
                           onDelete: (ovt) async {
                             final confirm = await showDialog<bool>(
@@ -124,7 +135,7 @@ class _OvertimeRecordsScreenState extends State<OvertimeRecordsScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: const Text(
-                                      'attendance record deleted successfully!'),
+                                      'Overtime record deleted successfully.'),
                                   backgroundColor: Colors.green.shade700,
                                 ),
                               );
