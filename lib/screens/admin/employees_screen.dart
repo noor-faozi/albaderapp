@@ -1,4 +1,5 @@
 import 'package:albaderapp/screens/admin/add_employee_screen.dart';
+import 'package:albaderapp/screens/admin/edit_employee_screen.dart';
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/widgets/custom_app_bar.dart';
@@ -103,7 +104,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => AddEmployeeScreen(
+                              builder: (_) => EditEmployeeScreen(
                                 employeeRecord: emp,
                               ),
                             ),

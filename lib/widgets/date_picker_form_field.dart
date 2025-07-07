@@ -4,12 +4,14 @@ class DatePickerFormField extends StatelessWidget {
   final DateTime selectedDate;
   final ValueChanged<DateTime> onChanged;
   final FormFieldValidator<DateTime>? validator;
+  final bool enabled;
 
   const DatePickerFormField({
     super.key,
     required this.selectedDate,
     required this.onChanged,
     this.validator,
+    this.enabled = true,
   });
 
   @override
@@ -24,22 +26,29 @@ class DatePickerFormField extends StatelessWidget {
             children: [
               const Text('Date:', style: TextStyle(fontSize: 16)),
               TextButton.icon(
-                onPressed: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: selectedDate,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime(2100),
-                  );
-                  if (date != null) {
-                    onChanged(date);
-                    field.didChange(date);
-                  }
-                },
+                onPressed: enabled
+                    ? () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2100),
+                        );
+                        if (date != null) {
+                          onChanged(date);
+                          field.didChange(date);
+                        }
+                      }
+                    : null,
                 icon: const Icon(Icons.calendar_today),
                 label: Text(
                   selectedDate.toLocal().toString().split(' ')[0],
-                  style: const TextStyle(fontSize: 16),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: enabled
+                        ? null
+                        : Colors.grey, // visually indicate disabled state
+                  ),
                 ),
               ),
             ],
