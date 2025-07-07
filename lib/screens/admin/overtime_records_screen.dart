@@ -17,17 +17,28 @@ class _OvertimeRecordsScreenState extends State<OvertimeRecordsScreen> {
   final supabase = Supabase.instance.client;
 
   String searchQuery = '';
+  late Future<List<Map<String, dynamic>>> _overtimeFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _overtimeFuture = fetchOvertimeData();
+  }
+
+  Future<List<Map<String, dynamic>>> fetchOvertimeData() async {
+    final result =
+        await supabase.from('overtime_with_employee').select().order('date');
+    return List<Map<String, dynamic>>.from(result);
+  }
+
+  Future<void> _refreshData() async {
+    setState(() {
+      _overtimeFuture = fetchOvertimeData();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Stream with optional filter
-    final Stream<List<Map<String, dynamic>>> overtimeStream = supabase
-        .from('overtime_with_employee')
-        .stream(primaryKey: ['id'])
-        .order('date')
-        .map((event) {
-          return (event as List).cast<Map<String, dynamic>>();
-        });
     return Scaffold(
       appBar: CustomAppBar(title: 'Overtime Records'),
       body: Column(
@@ -49,65 +60,81 @@ class _OvertimeRecordsScreenState extends State<OvertimeRecordsScreen> {
             ),
           ),
           Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: overtimeStream,
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-                if (!snapshot.hasData) {
-                  return const Center(
-                      child: CircularProgressIndicator(color: firstColor));
-                }
-
-                // Filter overtime by search query (employee ID)
-                List<Map<String, dynamic>> overtime = snapshot.data!;
-
-                if (searchQuery.isNotEmpty) {
-                  final id = int.tryParse(searchQuery);
-                  if (id != null) {
-                    overtime =
-                        overtime.where((e) => e['employee_id'] == id).toList();
-                  } else {
-                    overtime = [];
+            child: RefreshIndicator(
+              onRefresh: _refreshData,
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: _overtimeFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
                   }
-                }
+                  if (!snapshot.hasData) {
+                    return const Center(
+                        child: CircularProgressIndicator(color: firstColor));
+                  }
 
-                return OvertimeDataTableWidget(
-                  overtime: overtime,
-                  onEdit: (ovt) {
-                    // navigate to edit screen
-                  },
-                  onDelete: (ovt) async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text('Confirm Deletion'),
-                        content: const Text(
-                            'Are you sure you want to delete this overtime?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx, false),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx, true),
-                            child: const Text('Delete',
-                                style: TextStyle(color: Colors.red)),
-                          ),
-                        ],
-                      ),
-                    );
+                  // Filter overtime by search query (employee ID)
+                  List<Map<String, dynamic>> overtime = snapshot.data!;
 
-                    if (confirm == true) {
-                      await supabase
-                          .from('overtime')
-                          .delete()
-                          .eq('id', ovt['id']);
+                  if (searchQuery.isNotEmpty) {
+                    final id = int.tryParse(searchQuery);
+                    if (id != null) {
+                      overtime = overtime
+                          .where((e) => e['employee_id'] == id)
+                          .toList();
+                    } else {
+                      overtime = [];
                     }
-                  },
-                );
-              },
+                  }
+
+                  return ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        OvertimeDataTableWidget(
+                          overtime: overtime,
+                          onEdit: (ovt) {
+                            // navigate to edit screen
+                          },
+                          onDelete: (ovt) async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Confirm Deletion'),
+                                content: const Text(
+                                    'Are you sure you want to delete this overtime record?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: const Text('Delete',
+                                        style: TextStyle(color: Colors.red)),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirm == true) {
+                              await supabase
+                                  .from('overtime')
+                                  .delete()
+                                  .eq('id', ovt['id']);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text(
+                                      'attendance record deleted successfully!'),
+                                  backgroundColor: Colors.green.shade700,
+                                ),
+                              );
+                              _refreshData();
+                            }
+                          },
+                        ),
+                      ]);
+                },
+              ),
             ),
           ),
         ],

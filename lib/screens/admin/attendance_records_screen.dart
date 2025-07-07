@@ -2,7 +2,6 @@ import 'package:albaderapp/screens/admin/edit_attendance_screen.dart';
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/utils/time_utils.dart';
-import 'package:albaderapp/widgets/attendance_form.dart';
 import 'package:albaderapp/widgets/custom_app_bar.dart';
 import 'package:albaderapp/widgets/styled_date_table.dart';
 import 'package:flutter/material.dart';
@@ -97,7 +96,7 @@ class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
 
                   return ListView(
                     physics:
-                        const AlwaysScrollableScrollPhysics(), // needed for refresh to work
+                        const AlwaysScrollableScrollPhysics(),
                     children: [
                       OvertimeDataTableWidget(
                         attendance: attendance,
@@ -119,7 +118,7 @@ class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
                             builder: (ctx) => AlertDialog(
                               title: const Text('Confirm Deletion'),
                               content: const Text(
-                                  'Are you sure you want to delete this attendance?'),
+                                  'Are you sure you want to delete this attendance record?'),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(ctx, false),
