@@ -2,8 +2,8 @@ import 'package:albaderapp/screens/admin/edit_attendance_screen.dart';
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/utils/time_utils.dart';
-import 'package:albaderapp/widgets/attendance_form.dart';
 import 'package:albaderapp/widgets/custom_app_bar.dart';
+import 'package:albaderapp/widgets/custom_secondary_app_bar.dart';
 import 'package:albaderapp/widgets/styled_date_table.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -43,7 +43,7 @@ class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: "Attendance Records"),
+      appBar: const CustomSecondaryAppBar(title: "Attendance Records"),
       body: Column(
         children: [
           Padding(
@@ -97,7 +97,7 @@ class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
 
                   return ListView(
                     physics:
-                        const AlwaysScrollableScrollPhysics(), // needed for refresh to work
+                        const AlwaysScrollableScrollPhysics(),
                     children: [
                       OvertimeDataTableWidget(
                         attendance: attendance,
@@ -107,7 +107,7 @@ class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
                             MaterialPageRoute(
                               builder: (_) => EditAttendanceScreen(
                                 attendanceRecord:
-                                    atd, // <- pass full record map
+                                    atd,
                               ),
                             ),
                           );
@@ -119,7 +119,7 @@ class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
                             builder: (ctx) => AlertDialog(
                               title: const Text('Confirm Deletion'),
                               content: const Text(
-                                  'Are you sure you want to delete this attendance?'),
+                                  'Are you sure you want to delete this attendance record?'),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(ctx, false),
@@ -142,7 +142,7 @@ class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: const Text(
-                                    'attendance record deleted successfully!'),
+                                    'Attendance record deleted successfully.'),
                                 backgroundColor: Colors.green.shade700,
                               ),
                             );

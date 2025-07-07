@@ -62,7 +62,7 @@ class OvertimeApprovalCard extends StatelessWidget {
             _buildBoldText("Total Hours: ",
                 TimeUtils.formatHoursToHM(overtime['total_hours'])),
             _buildBoldText(
-                "Submitted By: ", "${(overtime['created_by_name'])} "),
+                "Manager: ", "${(overtime['created_by_name'])} "),
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,

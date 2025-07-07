@@ -12,10 +12,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class OvertimeForm extends StatefulWidget {
   final void Function()? onSubmitSuccess;
+  final Map<String, dynamic>? overtimeRecord; // For editing
 
   const OvertimeForm({
     super.key,
     this.onSubmitSuccess,
+    this.overtimeRecord,
   });
 
   @override
@@ -65,6 +67,18 @@ class _OvertimeFormState extends State<OvertimeForm> {
 
   @override
   void initState() {
+    if (widget.overtimeRecord != null) {
+      final record = widget.overtimeRecord!;
+      _employeeIdController.text = record['employee_id']?.toString() ?? '';
+      _workOrderIdController.text = record['work_order_id']?.toString() ?? '';
+      _selectedDate = DateTime.parse(record['date']);
+      _inTime = TimeUtils.parseTime(record['in_time']);
+      _outTime = TimeUtils.parseTime(record['out_time']);
+
+      _fetchEmployee();
+      _fetchWorkOrder();
+    }
+
     super.initState();
   }
 
@@ -104,7 +118,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
 
     if (selectedDateOnly.isAfter(today)) {
       setState(() {
-        _dateError = 'Date cannot be in the future';
+        _dateError = 'Date cannot be in the future.';
       });
       return;
     } else {
@@ -116,7 +130,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
     if (_totalHours == null || _totalHours! <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Total hours must be greater than 0'),
+          content: const Text('Total hours must be greater than 0.'),
           backgroundColor: Colors.red.shade700,
         ),
       );
@@ -129,7 +143,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
         _workOrder == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please complete all fields'),
+          content: const Text('Please complete all fields.'),
           backgroundColor: Colors.red.shade700,
         ),
       );
@@ -147,24 +161,26 @@ class _OvertimeFormState extends State<OvertimeForm> {
     final employeeId = _employee!['id'];
     final formattedDate = _selectedDate.toIso8601String().split('T').first;
 
-    //Check for existing overtime attendance for this employee on this date
-    final existing = await supabase
-        .from('overtime')
-        .select()
-        .eq('employee_id', employeeId)
-        .eq('date', formattedDate)
-        .maybeSingle();
+    //Check for existing overtime attendance for this employee on this date when creating new record
+    if (widget.overtimeRecord == null) {
+      final existing = await supabase
+          .from('overtime')
+          .select()
+          .eq('employee_id', employeeId)
+          .eq('date', formattedDate)
+          .maybeSingle();
 
-    if (existing != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Attendance already submitted for this employee on this date',
+      if (existing != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Overtime already submitted for this employee on this date.',
+            ),
+            backgroundColor: Colors.red.shade700,
           ),
-          backgroundColor: Colors.red.shade700,
-        ),
-      );
-      return;
+        );
+        return;
+      }
     }
 
     // Check if the date is a holiday
@@ -190,18 +206,32 @@ class _OvertimeFormState extends State<OvertimeForm> {
       'created_by': user.id,
     };
 
-    await supabase.from('overtime').insert(data);
+    if (widget.overtimeRecord != null) {
+      final id = widget.overtimeRecord!['id'];
+      await supabase.from('overtime').update(data).eq('id', id);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Overtime updated successfully.'),
+          backgroundColor: Colors.green.shade700,
+        ),
+      );
+      Navigator.pop(context);
+    } else {
+      await supabase.from('overtime').insert(data);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Overtime submitted successfully.'),
+          backgroundColor: Colors.green.shade700,
+        ),
+      );
+    }
+
     setState(() {
       _isLoading = false;
     });
     _resetForm();
-    // Success
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Overtime submitted successfully'),
-        backgroundColor: Colors.green.shade700,
-      ),
-    );
   }
 
   @override
@@ -217,10 +247,12 @@ class _OvertimeFormState extends State<OvertimeForm> {
           child: FormCardWrapper(
             child: Column(
               children: [
-                const Center(
+                Center(
                     child: Text(
-                  "Overtime Form",
-                  style: TextStyle(
+                  widget.overtimeRecord != null
+                      ? "Edit Overtime"
+                      : "Overtime Form",
+                  style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 0.7),
@@ -244,6 +276,7 @@ class _OvertimeFormState extends State<OvertimeForm> {
                 // Employee:
                 SearchAndDisplayCard<Map<String, dynamic>>(
                   controller: _employeeIdController,
+                  readOnly: widget.overtimeRecord != null,
                   exactDigits: 3,
                   label: 'Employee Code',
                   onSearch: _fetchEmployee,
@@ -347,7 +380,11 @@ class _OvertimeFormState extends State<OvertimeForm> {
                 const SizedBox(height: 12),
 
                 CustomButton(
-                  label: _isLoading ? 'Loading...' : 'Add Overtime',
+                  label: _isLoading
+                      ? 'Loading...'
+                      : widget.overtimeRecord != null
+                          ? 'Update Overtime'
+                          : 'Add Overtime',
                   widthFactor: 0.8,
                   heightFactor: 0.1,
                   onPressed: _isLoading

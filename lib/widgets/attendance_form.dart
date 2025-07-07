@@ -118,7 +118,7 @@ class _AttendanceFormState extends State<AttendanceForm> {
 
     if (selectedDateOnly.isAfter(today)) {
       setState(() {
-        _dateError = 'Date cannot be in the future';
+        _dateError = 'Date cannot be in the future.';
       });
       return;
     } else {
@@ -129,7 +129,7 @@ class _AttendanceFormState extends State<AttendanceForm> {
 
     if (_totalHours == null || _totalHours! <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Total hours must be greater than 0')),
+        const SnackBar(content: Text('Total hours must be greater than 0.')),
       );
       return;
     }
@@ -170,7 +170,7 @@ class _AttendanceFormState extends State<AttendanceForm> {
       if (existing != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Attendance already exists for this date.'),
+            content: const Text('Attendance already exists for this employee on this date.'),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -204,7 +204,7 @@ class _AttendanceFormState extends State<AttendanceForm> {
       await supabase.from('attendance').insert(data);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Attendance submitted'),
+          content: const Text('Attendance submitted.'),
           backgroundColor: Colors.green.shade700,
         ),
       );
