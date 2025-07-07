@@ -1,4 +1,3 @@
-import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/utils/time_utils.dart';
 import 'package:albaderapp/widgets/custom_button.dart';

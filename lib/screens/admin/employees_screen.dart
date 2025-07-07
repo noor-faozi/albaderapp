@@ -100,7 +100,15 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                       EmployeesDataTableWidget(
                         employees: employees,
                         onEdit: (emp) {
-                          // navigate to edit screen
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => AddEmployeeScreen(
+                                employeeRecord: emp,
+                              ),
+                            ),
+                          );
+                          _refreshData();
                         },
                         onDelete: (emp) async {
                           final confirm = await showDialog<bool>(
