@@ -14,6 +14,7 @@ class CustomTextFormField extends StatefulWidget {
   final int? maxLength;
   final int? maxLines;
   final List<TextInputFormatter>? inputFormatters;
+  final bool isReadOnly;
 
   const CustomTextFormField(
       {super.key,
@@ -27,7 +28,8 @@ class CustomTextFormField extends StatefulWidget {
       this.onChanged,
       this.maxLength,
       this.maxLines = 1,
-      this.inputFormatters});
+      this.inputFormatters,
+      this.isReadOnly = false});
 
   @override
   State<CustomTextFormField> createState() => _CustomTextFormFieldState();
@@ -63,6 +65,7 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
       onChanged: widget.onChanged,
       maxLength: widget.maxLength,
       maxLines: widget.maxLines,
+      readOnly: widget.isReadOnly,
       inputFormatters: widget.inputFormatters,
       decoration: InputDecoration(
         labelText: widget.labelText,

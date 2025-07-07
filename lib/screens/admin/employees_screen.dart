@@ -17,12 +17,30 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
   final supabase = Supabase.instance.client;
 
   String searchQuery = '';
+  late Future<List<Map<String, dynamic>>> _employeeFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _employeeFuture = fetchEmployeeData();
+  }
+
+  Future<List<Map<String, dynamic>>> fetchEmployeeData() async {
+    final result =
+        await supabase.from('active_employees').select().order('name');
+    return List<Map<String, dynamic>>.from(result);
+  }
+
+  Future<void> _refreshData() async {
+    setState(() {
+      _employeeFuture = fetchEmployeeData();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Stream with optional filter
     final Stream<List<Map<String, dynamic>>> employeesStream = supabase
-        .from('employees')
+        .from('active_employees')
         .stream(primaryKey: ['id'])
         .order('id')
         .map((event) {
@@ -50,39 +68,93 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
             ),
           ),
           Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: employeesStream,
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-                if (!snapshot.hasData) {
-                  return const Center(
-                      child: CircularProgressIndicator(color: firstColor));
-                }
-
-                // Filter employees by search query (ID)
-                List<Map<String, dynamic>> employees = snapshot.data!;
-
-                if (searchQuery.isNotEmpty) {
-                  final id = int.tryParse(searchQuery);
-                  if (id != null) {
-                    employees = employees.where((e) => e['id'] == id).toList();
-                  } else {
-                    employees = [];
+            child: RefreshIndicator(
+              onRefresh: _refreshData,
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: _employeeFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
                   }
-                }
+                  if (!snapshot.hasData) {
+                    return const Center(
+                        child: CircularProgressIndicator(color: firstColor));
+                  }
 
-                return EmployeesDataTableWidget(
-                  employees: employees,
-                  onEdit: (emp) {
-                    // navigate to edit screen
-                  },
-                  onDelete: (emp) {
-                    // show delete confirmation
-                  },
-                );
-              },
+                  // Filter employees by search query (ID)
+                  List<Map<String, dynamic>> employees = snapshot.data!;
+
+                  if (searchQuery.isNotEmpty) {
+                    final id = int.tryParse(searchQuery);
+                    if (id != null) {
+                      employees =
+                          employees.where((e) => e['id'] == id).toList();
+                    } else {
+                      employees = [];
+                    }
+                  }
+
+                  return ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      EmployeesDataTableWidget(
+                        employees: employees,
+                        onEdit: (emp) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => AddEmployeeScreen(
+                                employeeRecord: emp,
+                              ),
+                            ),
+                          );
+                          _refreshData();
+                        },
+                        onDelete: (emp) async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Confirm Deletion'),
+                              content: Text(
+                                  'Are you sure you want to delete employee ${emp['name']}?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, false),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  child: const Text('Delete',
+                                      style: TextStyle(color: Colors.red)),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (confirm == true) {
+                            await Supabase.instance.client
+                                .from('employees')
+                                .update({
+                              'deleted_at': DateTime.now().toIso8601String(),
+                              'is_active': false,
+                            }).eq('id', emp['id']);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Employee deleted successfully (soft delete).'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+
+                            _refreshData();
+                          }
+                        },
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -200,7 +272,7 @@ class _EmployeesDataTableWidgetState extends State<EmployeesDataTableWidget> {
         ),
         child: StyledDataTable(
           child: PaginatedDataTable(
-            header: const Text('Employees'),
+            header: const Text('Active Employees'),
             rowsPerPage: 5,
             columns: const [
               DataColumn(label: Text('ID')),

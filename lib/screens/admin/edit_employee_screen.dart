@@ -1,18 +1,18 @@
+import 'package:albaderapp/screens/admin/add_employee_screen.dart';
 import 'package:albaderapp/utils/responsive.dart';
-import 'package:albaderapp/widgets/attendance_form.dart';
 import 'package:albaderapp/widgets/custom_secondary_app_bar.dart';
 import 'package:flutter/material.dart';
 
-class EditAttendanceScreen extends StatefulWidget {
-  final Map<String, dynamic> attendanceRecord;
+class EditEmployeeScreen extends StatefulWidget {
+  final Map<String, dynamic> employeeRecord;
 
-  const EditAttendanceScreen({super.key, required this.attendanceRecord});
+  const EditEmployeeScreen({super.key, required this.employeeRecord});
 
   @override
-  State<EditAttendanceScreen> createState() => _EditAttendanceScreenState();
+  State<EditEmployeeScreen> createState() => _EditEmployeeScreenState();
 }
 
-class _EditAttendanceScreenState extends State<EditAttendanceScreen> {
+class _EditEmployeeScreenState extends State<EditEmployeeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,8 +22,8 @@ class _EditAttendanceScreenState extends State<EditAttendanceScreen> {
           child: Column(
             children: [
               Expanded(
-                child: AttendanceForm(
-                  attendanceRecord: widget.attendanceRecord,
+                child: AddEmployeeScreen(
+                  employeeRecord: widget.employeeRecord,
                 ),
               ),
             ],

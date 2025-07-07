@@ -2,7 +2,6 @@ import 'package:albaderapp/screens/admin/edit_attendance_screen.dart';
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/utils/time_utils.dart';
-import 'package:albaderapp/widgets/custom_app_bar.dart';
 import 'package:albaderapp/widgets/custom_secondary_app_bar.dart';
 import 'package:albaderapp/widgets/styled_date_table.dart';
 import 'package:flutter/material.dart';

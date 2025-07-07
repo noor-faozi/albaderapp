@@ -12,7 +12,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:albaderapp/utils/responsive.dart';
 
 class AddEmployeeScreen extends StatefulWidget {
-  const AddEmployeeScreen({super.key});
+  final Map<String, dynamic>? employeeRecord; // For editing
+
+  const AddEmployeeScreen({super.key, this.employeeRecord});
 
   @override
   State<AddEmployeeScreen> createState() => _AddEmployeeScreenState();
@@ -40,6 +42,21 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   @override
   void initState() {
     super.initState();
+
+    // If editing an existing employee, pre-fill the form
+    if (widget.employeeRecord != null) {
+      final record = widget.employeeRecord!;
+      _employeeIdController.text = record['id'].toString();
+      _nameController.text = record['name'] ?? '';
+      _professionController.text = record['profession'] ?? '';
+      _usernameController.text = record['username'] ?? '';
+      _salaryController.text = record['salary']?.toString() ?? '';
+      _allowanceController.text = record['allowance']?.toString() ?? '';
+
+      // Avoid overwriting the username/password on name change
+      _usernameManuallyEdited = true;
+      _passwordManuallyEdited = true;
+    }
 
     _usernameController.addListener(() {
       _usernameManuallyEdited = true;
@@ -106,8 +123,11 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                     labelText: "Employee ID (3 digits)",
                     keyboardType: TextInputType.number,
                     maxLength: 3,
+                    isReadOnly: widget.employeeRecord != null,
                     validator: _validateEmployeeId,
-                    onChanged: _checkEmployeeIdUnique,
+                    onChanged: widget.employeeRecord == null
+                        ? _checkEmployeeIdUnique
+                        : null,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     prefixIcon: const Icon(Icons.badge_rounded),
                   ),
@@ -120,36 +140,40 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                     prefixIcon: const Icon(Icons.person_rounded),
                   ),
                   SizedBox(height: screenHeight(context, 0.025)),
-                  CustomTextFormField(
-                    controller: _usernameController,
-                    labelText: "Username",
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Enter username";
-                      }
-                      // Check username contains at least one number
-                      if (!RegExp(r'\d').hasMatch(value)) {
-                        return "Username must contain at least one number";
-                      }
-                      return null;
-                    },
-                    prefixIcon: const Icon(Icons.person_outline_rounded),
-                  ),
-                  SizedBox(height: screenHeight(context, 0.025)),
-                  CustomTextFormField(
-                    controller: _passwordController,
-                    labelText: 'Password',
-                    isPassword: true,
-                    prefixIcon: const Icon(Icons.lock),
-                    validator: (val) {
-                      if (val == null || val.isEmpty) return 'Enter password';
-                      if (!_isStrongPassword(val)) {
-                        return 'Password must be at least 8 characters, include uppercase, lowercase, number, and special character';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: screenHeight(context, 0.025)),
+                  if (widget.employeeRecord == null) ...[
+                    CustomTextFormField(
+                      controller: _usernameController,
+                      labelText: "Username",
+                      isReadOnly: widget.employeeRecord != null,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Enter username";
+                        }
+                        // Check username contains at least one number
+                        if (!RegExp(r'\d').hasMatch(value)) {
+                          return "Username must contain at least one number";
+                        }
+                        return null;
+                      },
+                      prefixIcon: const Icon(Icons.person_outline_rounded),
+                    ),
+                    SizedBox(height: screenHeight(context, 0.025)),
+                    CustomTextFormField(
+                      controller: _passwordController,
+                      labelText: 'Password',
+                      isPassword: true,
+                      isReadOnly: widget.employeeRecord != null,
+                      prefixIcon: const Icon(Icons.lock),
+                      validator: (val) {
+                        if (val == null || val.isEmpty) return 'Enter password';
+                        if (!_isStrongPassword(val)) {
+                          return 'Password must be at least 8 characters, include uppercase, lowercase, number, and special character';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: screenHeight(context, 0.025)),
+                  ],
                   CustomTextFormField(
                     controller: _professionController,
                     labelText: "Profession",
@@ -191,13 +215,19 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                   ),
                   SizedBox(height: screenHeight(context, 0.035)),
                   CustomButton(
-                    label: _isLoading ? 'Loading...' : "Add Employee",
-                    onPressed: _isLoading ? null : () async {
-                          if (await showConfirmDialog(context,
-                              'Are you sure you want to submit this record?')) {
-                            _handleCreateEmployee();
-                          }
-                        },
+                    label: _isLoading
+                        ? 'Loading...'
+                        : widget.employeeRecord != null
+                            ? 'Update Employee'
+                            : 'Add Employee',
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                            if (await showConfirmDialog(context,
+                                'Are you sure you want to submit this record?')) {
+                              _handleCreateEmployee();
+                            }
+                          },
                     widthFactor: 0.8,
                     heightFactor: 0.1,
                   ),
@@ -231,41 +261,65 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
 
     final double? salary = double.tryParse(salaryText);
     final double? allowance = double.tryParse(allowanceText);
+    final isEdit = widget.employeeRecord != null;
 
     try {
-      final authRes =
-          await supabase.auth.signUp(email: email, password: password);
-      final userId = authRes.user?.id;
-      if (userId == null) throw Exception("User creation failed");
+      if (isEdit) {
+        final id = widget.employeeRecord!['id'];
 
-      await supabase.from('profiles').insert({
-        'id': userId,
-        'username': username,
-        'role': 'employee',
-        'full_name': name,
-      });
+        await supabase.from('employees').update({
+          'name': name,
+          'profession': profession,
+          'salary': salary,
+          'allowance': allowance,
+        }).eq('id', id);
 
-      await supabase.from('employees').insert({
-        'id': employeeId,
-        'user_id': userId,
-        'name': name,
-        'profession': profession,
-        'salary': salary,
-        'allowance': allowance
-      });
+        // update profile name
+        final userId = widget.employeeRecord!['user_id'];
+        if (userId != null) {
+          await supabase.from('profiles').update({
+            'full_name': name,
+          }).eq('id', userId);
+        }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Employee created successfully!')),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Employee updated successfully.'),
+            backgroundColor: Colors.green.shade700,
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        final authRes =
+            await supabase.auth.signUp(email: email, password: password);
+        final userId = authRes.user?.id;
+        if (userId == null) throw Exception("User creation failed.");
 
-      // Clear form
-      _employeeIdController.clear();
-      _nameController.clear();
-      _professionController.clear();
-      _usernameController.clear();
-      _passwordController.clear();
-      _salaryController.clear();
-      _allowanceController.clear();
+        await supabase.from('profiles').insert({
+          'id': userId,
+          'username': username,
+          'role': 'employee',
+          'full_name': name,
+        });
+
+        await supabase.from('employees').insert({
+          'id': employeeId,
+          'user_id': userId,
+          'name': name,
+          'profession': profession,
+          'salary': salary,
+          'allowance': allowance
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Employee created successfully.'),
+            backgroundColor: Colors.green.shade700,
+          ),
+        );
+
+        Navigator.pop(context);
+      }
     } catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
