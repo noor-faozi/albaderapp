@@ -20,14 +20,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Text(title, style: const TextStyle(fontSize: 22),),
       centerTitle: true,
       backgroundColor: Theme.of(context).colorScheme.primary,
+      iconTheme: const IconThemeData(color: Colors.white),
       titleTextStyle: const TextStyle(
           color: Colors.white, fontSize: 20, fontWeight: FontWeight.w500),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.logout),
-          onPressed: logout,
-        ),
-      ],
     );
   }
 
