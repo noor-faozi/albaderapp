@@ -1,4 +1,5 @@
 import 'package:albaderapp/layouts/admin_layout.dart';
+import 'package:albaderapp/layouts/manager_layout.dart';
 import 'package:albaderapp/screens/admin/login_screen.dart';
 import 'package:albaderapp/theme/colors.dart';
 import 'package:flutter/material.dart';
@@ -56,8 +57,8 @@ class AuthGate extends StatelessWidget {
             switch (role) {
               case 'admin':
                 return const AdminLayout();
-              // case 'manager':
-              //   return ManagerLayout();
+              case 'manager':
+                return const ManagerLayout();
               // case 'sv':
               //   return SupervisorLayout();
               // case 'employee':

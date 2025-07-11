@@ -82,26 +82,31 @@ class CommonDrawer extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-
           const Spacer(),
 
-          // Logout button
           Padding(
             padding: const EdgeInsets.all(20),
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.logout, color: Colors.white),
-              label: const Text('Logout'),
+            child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
-                foregroundColor: Colors.redAccent,
+                backgroundColor: Colors.redAccent,
                 elevation: 5,
                 shadowColor: Colors.red.shade200,
-                textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textStyle:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               onPressed: onLogout,
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.logout, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('Logout', style: TextStyle(color: Colors.white)),
+                ],
+              ),
             ),
           ),
         ],
