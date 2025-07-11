@@ -34,7 +34,6 @@ class _HolidaysState extends State<HolidaysScreen> {
         });
 
     return Scaffold(
-      appBar: CustomAppBar(title: 'Holidays'),
       body: Column(
         children: [
           Expanded(

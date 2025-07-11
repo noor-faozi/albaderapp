@@ -16,7 +16,6 @@ class _AttendanceState extends State<AttendanceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: CustomAppBar(title: "Attendance"),
         body: Padding(
           padding: EdgeInsets.all(screenPadding(context, 0.03)),
           child: Column(

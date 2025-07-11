@@ -76,7 +76,6 @@ class _ReportScreenState extends State<ReportScreen> {
     final padding = screenPadding(context, 0.04);
 
     return Scaffold(
-      appBar: CustomAppBar(title: "Labour Cost Report"),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(padding),
         child: Column(
