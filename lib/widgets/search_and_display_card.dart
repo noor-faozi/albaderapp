@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/widgets/custom_button.dart';
+import 'package:albaderapp/widgets/search_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -19,7 +20,7 @@ class SearchAndDisplayCard<T> extends StatelessWidget {
   final bool readOnly;
 
   const SearchAndDisplayCard({
-    Key? key,
+    super.key,
     required this.controller,
     this.exactDigits,
     required this.label,
@@ -31,54 +32,21 @@ class SearchAndDisplayCard<T> extends StatelessWidget {
     required this.horizontalPadding,
     required this.buttonHeight,
     this.readOnly = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: controller,
-                readOnly: readOnly,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly, 
-                  if (exactDigits != null)
-                    LengthLimitingTextInputFormatter(exactDigits),
-                ],
-                decoration: InputDecoration(
-                  labelText: label,
-                  border: const OutlineInputBorder(
-                    borderSide: BorderSide(width: 0.1,),
-                  ),
-                  contentPadding: EdgeInsets.symmetric(
-                    vertical: verticalPadding,
-                    horizontal: horizontalPadding,
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Enter $label';
-                  } else if (value.length != exactDigits) {
-                    return '$label must be exactly $exactDigits digits';
-                  }
-                  return null; // valid
-                },
-              ),
-            ),
-            SizedBox(width: horizontalPadding),
-            SizedBox(
-              height: buttonHeight,
-              child: CustomButton(
-                label: 'Search',
-                onPressed: onSearch,
-                textColor: Colors.grey[700],
-              ),
-            ),
-          ],
+        SearchInput(
+          controller: controller,
+          exactDigits: exactDigits,
+          label: label,
+          onSearch: onSearch,
+          verticalPadding: verticalPadding,
+          horizontalPadding: horizontalPadding,
+          buttonHeight: buttonHeight,
+          readOnly: readOnly,
         ),
         const SizedBox(height: 10),
         if (data != null) ...[

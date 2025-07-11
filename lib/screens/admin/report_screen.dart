@@ -1,3 +1,4 @@
+import 'package:albaderapp/widgets/search_input.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -18,7 +19,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
   final supabase = Supabase.instance.client;
 
-Future<double> fetchWorkOrderCost(String workOrderID) async {
+  Future<double> fetchWorkOrderCost(String workOrderID) async {
     double total = 0.0;
 
     // Attendance cost
@@ -32,12 +33,11 @@ Future<double> fetchWorkOrderCost(String workOrderID) async {
     }
 
     // Overtime cost
-final overtimeData = await supabase
+    final overtimeData = await supabase
         .from('overtime')
         .select('amount')
         .eq('work_order_id', workOrderID)
         .eq('approved', true);
-
 
     for (var row in overtimeData) {
       total += (row['amount'] ?? 0);
@@ -45,7 +45,6 @@ final overtimeData = await supabase
 
     return total;
   }
-
 
   Future<void> fetchProjectCosts(String projectID) async {
     final workOrders = await supabase
@@ -69,7 +68,6 @@ final overtimeData = await supabase
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,25 +79,16 @@ final overtimeData = await supabase
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Work Order Report",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            TextField(
+            SearchInput(
               controller: _workOrderController,
-              decoration: InputDecoration(
-                labelText: 'Enter Work Order ID',
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () async {
-                    final cost = await fetchWorkOrderCost(
-                        _workOrderController.text.trim());
-                    setState(() {
-                      workOrderCost = cost;
-                    });
-                  },
-                ),
-              ),
+              label: 'Enter Work Order ID',
+              onSearch: () async {
+                final cost =
+                    await fetchWorkOrderCost(_workOrderController.text.trim());
+                setState(() {
+                  workOrderCost = cost;
+                });
+              },
             ),
             if (workOrderCost != null)
               Padding(
@@ -113,18 +102,12 @@ final overtimeData = await supabase
             const Text("Project Report",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            TextField(
+            SearchInput(
               controller: _projectController,
-              decoration: InputDecoration(
-                labelText: 'Enter Project ID',
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () async {
-                    await fetchProjectCosts(_projectController.text.trim());
-                  },
-                ),
-              ),
+              label: 'Enter Project ID',
+              onSearch: () async {
+                await fetchWorkOrderCost(_projectController.text.trim());
+              },
             ),
             if (projectWorkOrders.isNotEmpty) ...[
               const SizedBox(height: 12),
