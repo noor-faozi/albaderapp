@@ -18,7 +18,7 @@ class _OvertimeApprovalScreenState extends State<OvertimeApprovalScreen> {
     final response = await supabase
         .from('overtime_with_employee')
         .select()
-        .isFilter('approved_by', null)
+        .isFilter('approved', null)
         .order('date', ascending: false);
 
     setState(() {
@@ -30,11 +30,24 @@ class _OvertimeApprovalScreenState extends State<OvertimeApprovalScreen> {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return;
 
-    await supabase
-        .from('overtime')
-        .update({'approved_by': userId}).eq('id', id);
+    await supabase.from('overtime').update({
+      'approved_by': userId,
+      'approved': true,
+    }).eq('id', id);
 
-    await fetchPendingOvertime(); 
+    await fetchPendingOvertime();
+  }
+
+  Future<void> rejectOvertime(int id) async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return;
+
+    await supabase.from('overtime').update({
+      'approved_by': userId,
+      'approved': false, 
+    }).eq('id', id);
+
+    await fetchPendingOvertime();
   }
 
   @override
@@ -56,6 +69,7 @@ class _OvertimeApprovalScreenState extends State<OvertimeApprovalScreen> {
                 return OvertimeApprovalCard(
                   overtime: overtime,
                   onApprove: () => approveOvertime(overtime['id']),
+                  onReject: () => rejectOvertime(overtime['id'])
                 );
               },
             ),

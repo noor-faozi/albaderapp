@@ -6,11 +6,13 @@ import 'package:flutter/material.dart';
 class OvertimeApprovalCard extends StatelessWidget {
   final Map<String, dynamic> overtime;
   final void Function()? onApprove;
+  final void Function()? onReject; 
 
   const OvertimeApprovalCard({
     super.key,
     required this.overtime,
     this.onApprove,
+    this.onReject, 
   });
 
   @override
@@ -61,47 +63,91 @@ class OvertimeApprovalCard extends StatelessWidget {
             ),
             _buildBoldText("Total Hours: ",
                 TimeUtils.formatHoursToHM(overtime['total_hours'])),
-            _buildBoldText(
-                "Manager: ", "${(overtime['created_by_name'])} "),
+            _buildBoldText("Manager: ", "${(overtime['created_by_name'])} "),
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,
-              child: CustomButton(
-                label: "Approve",
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Confirm Action'),
-                      content: const Text(
-                          'Are you sure you want to approve this overtime record?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(
-                              color: Colors.red[900],
-                              fontSize: 16,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CustomButton(
+                    label: "Reject",
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Confirm Action'),
+                          content: const Text(
+                              'Are you sure you want to reject this overtime record?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: Colors.red[900],
+                                  fontSize: 16,
+                                ),
+                              ),
                             ),
-                          ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                onReject?.call();
+                              },
+                              child: const Text('Confirm',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+                          ],
                         ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            onApprove?.call();
-                          },
-                          child: const Text('Confirm',
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
+                      );
+                    },
+                    widthFactor: 0.25,
+                    heightFactor: 0.08,
+                    textColor: Colors.red[900],
+                  ),
+                  const SizedBox(width: 12),
+                  CustomButton(
+                    label: "Approve",
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Confirm Action'),
+                          content: const Text(
+                              'Are you sure you want to approve this overtime record?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: Colors.red[900],
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                onApprove?.call();
+                              },
+                              child: const Text('Confirm',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  );
-                },
-                widthFactor: 0.25,
-                heightFactor: 0.08,
-                textColor: Colors.green[900],
+                      );
+                    },
+                    widthFactor: 0.25,
+                    heightFactor: 0.08,
+                    textColor: Colors.green[900],
+                  ),
+                ],
               ),
             ),
           ],
