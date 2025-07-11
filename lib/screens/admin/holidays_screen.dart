@@ -1,4 +1,4 @@
-import 'package:albaderapp/screens/add_holiday_screen.dart';
+import 'package:albaderapp/screens/admin/add_holiday_screen.dart';
 import 'package:albaderapp/screens/admin/edit_holiday_screen.dart';
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
