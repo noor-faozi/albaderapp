@@ -1,3 +1,4 @@
+import 'package:albaderapp/auth/auth_service.dart';
 import 'package:albaderapp/screens/admin/attendance_screen.dart';
 import 'package:albaderapp/screens/admin/employees_screen.dart';
 import 'package:albaderapp/screens/admin/holidays_screen.dart';
@@ -17,6 +18,7 @@ class AdminLayout extends StatefulWidget {
 }
 
 class _AdminLayoutState extends State<AdminLayout> {
+  AuthService authService = AuthService();
   int _selectedIndex = 0;
 
   String userName = 'Loading...';
@@ -118,7 +120,7 @@ class _AdminLayoutState extends State<AdminLayout> {
           );
 
           if (confirm == true) {
-            await Supabase.instance.client.auth.signOut();
+            authService.signOut();
           }
         },
       ),

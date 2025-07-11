@@ -1,3 +1,4 @@
+import 'package:albaderapp/auth/auth_service.dart';
 import 'package:albaderapp/screens/manager/overtime_screen.dart';
 import 'package:albaderapp/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,8 @@ class ManagerLayout extends StatefulWidget {
 }
 
 class _ManagerLayoutState extends State<ManagerLayout> {
+  AuthService authService = AuthService();
+
   String userName = 'Loading...';
   String userRole = 'Loading...';
   String userEmail = 'Loading...';
@@ -86,7 +89,7 @@ class _ManagerLayoutState extends State<ManagerLayout> {
           );
 
           if (confirm == true) {
-            await Supabase.instance.client.auth.signOut();
+            authService.signOut();
           }
         },
       ),
