@@ -149,6 +149,26 @@ class _AttendanceFormState extends State<AttendanceForm> {
     final employeeId = _employee!['id'];
     final formattedDate = _selectedDate.toIso8601String().split('T').first;
 
+    // Check if selected date is a holiday
+    final isHoliday = await supabase
+        .from('holidays')
+        .select()
+        .eq('date', formattedDate)
+        .maybeSingle();
+
+    if (isHoliday != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('The selected date is a holiday. If work was performed, please submit an overtime request instead.'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -169,7 +189,8 @@ class _AttendanceFormState extends State<AttendanceForm> {
       if (existing != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Attendance already exists for this employee on this date.'),
+            content: const Text(
+                'Attendance already exists for this employee on this date.'),
             backgroundColor: Colors.red.shade700,
           ),
         );
