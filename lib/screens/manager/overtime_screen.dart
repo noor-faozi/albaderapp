@@ -59,7 +59,7 @@ class _OvertimeScreenState extends State<OvertimeScreen> {
             ),
             SizedBox(height: screenHeight(context, 0.02)),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(screenPadding(context, 0.03)),
               child: TextField(
                 decoration: const InputDecoration(
                   labelText: 'Search by ID',

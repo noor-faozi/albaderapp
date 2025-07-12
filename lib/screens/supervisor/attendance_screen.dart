@@ -1,9 +1,10 @@
+import 'package:albaderapp/screens/supervisor/attendance_records_screen.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/widgets/attendance_form.dart';
 import 'package:albaderapp/widgets/custom_button.dart';
+import 'package:albaderapp/widgets/custom_secondary_app_bar.dart';
 import 'package:flutter/material.dart';
 
-import '../admin/attendance_records_screen.dart';
 
 class AttendanceScreen extends StatefulWidget {
   const AttendanceScreen({super.key});
