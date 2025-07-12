@@ -1,34 +1,33 @@
+import 'package:albaderapp/screens/admin/attendance_records_screen.dart';
 import 'package:albaderapp/utils/time_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:albaderapp/widgets/styled_date_table.dart';
 
-class OvertimeDataTableWidget extends StatefulWidget {
-  final List<Map<String, dynamic>> overtime;
+class AttendanceDataTableWidget extends StatefulWidget {
+  final List<Map<String, dynamic>> attendance;
   final void Function(Map<String, dynamic>)? onEdit;
   final void Function(Map<String, dynamic>)? onDelete;
   final bool showEdit;
   final bool showDelete;
   final bool showAmount;
-  final bool showApproval;
 
-  const OvertimeDataTableWidget({
+  const AttendanceDataTableWidget({
     super.key,
-    required this.overtime,
+    required this.attendance,
     this.onEdit,
     this.onDelete,
     this.showEdit = true,
     this.showDelete = true,
     this.showAmount = true,
-    this.showApproval = true,
   });
 
   @override
-  State<OvertimeDataTableWidget> createState() =>
-      _OvertimeDataTableWidgetState();
+  State<AttendanceDataTableWidget> createState() =>
+      _AttendanceDataTableWidgetState();
 }
 
-class _OvertimeDataTableWidgetState extends State<OvertimeDataTableWidget> {
-  late OvertimeDataTable _data;
+class _AttendanceDataTableWidgetState extends State<AttendanceDataTableWidget> {
+  late AttendanceDataTable _data;
 
   @override
   void initState() {
@@ -37,22 +36,21 @@ class _OvertimeDataTableWidgetState extends State<OvertimeDataTableWidget> {
   }
 
   @override
-  void didUpdateWidget(covariant OvertimeDataTableWidget oldWidget) {
+  void didUpdateWidget(covariant AttendanceDataTableWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.overtime != widget.overtime) {
+    if (oldWidget.attendance != widget.attendance) {
       _data = _buildDataSource();
     }
   }
 
-  OvertimeDataTable _buildDataSource() {
-    return OvertimeDataTable(
-      overtime: widget.overtime,
+  AttendanceDataTable _buildDataSource() {
+    return AttendanceDataTable(
+      attendance: widget.attendance,
       onEdit: widget.onEdit,
       onDelete: widget.onDelete,
       showEdit: widget.showEdit,
       showDelete: widget.showDelete,
       showAmount: widget.showAmount,
-      showApproval: widget.showApproval,
     );
   }
 
@@ -73,16 +71,9 @@ class _OvertimeDataTableWidgetState extends State<OvertimeDataTableWidget> {
       columns.add(const DataColumn(label: Text('Amount')));
     }
 
-    columns.add(const DataColumn(label: Text('Type')));
-
-    if (widget.showApproval) {
-      columns.add(const DataColumn(label: Text('Approved')));
-    }
-
-    columns.addAll([
+    columns.add(
       const DataColumn(label: Text('Supervisor')),
-      const DataColumn(label: Text('Manager')),
-    ]);
+    );
 
     if (widget.showEdit || widget.showDelete) {
       columns.add(const DataColumn(label: Text('Action')));
@@ -93,7 +84,7 @@ class _OvertimeDataTableWidgetState extends State<OvertimeDataTableWidget> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: StyledDataTable(
           child: PaginatedDataTable(
-            header: const Text('Overtime Records'),
+            header: const Text('Attendance Records'),
             rowsPerPage: 7,
             columns: columns,
             source: _data,
@@ -104,30 +95,27 @@ class _OvertimeDataTableWidgetState extends State<OvertimeDataTableWidget> {
   }
 }
 
-class OvertimeDataTable extends DataTableSource {
-  final List<Map<String, dynamic>> overtime;
+class AttendanceDataTable extends DataTableSource {
+  final List<Map<String, dynamic>> attendance;
   final void Function(Map<String, dynamic>)? onEdit;
   final void Function(Map<String, dynamic>)? onDelete;
   final bool showEdit;
   final bool showDelete;
   final bool showAmount;
-  final bool showApproval;
 
-  OvertimeDataTable({
-    required this.overtime,
+  AttendanceDataTable({
+    required this.attendance,
     this.onEdit,
     this.onDelete,
     required this.showEdit,
     required this.showDelete,
     required this.showAmount,
-    required this.showApproval,
   });
 
   @override
   DataRow? getRow(int index) {
-    if (index >= overtime.length) return null;
-    final ovt = overtime[index];
-    final isHoliday = ovt['holiday_id'] != null;
+    if (index >= attendance.length) return null;
+    final ovt = attendance[index];
 
     final rowColor = index % 2 == 0 ? Colors.white : Colors.grey[100];
 
@@ -149,44 +137,7 @@ class OvertimeDataTable extends DataTableSource {
           DataCell(Text('${(ovt['amount'] ?? 0).toStringAsFixed(4)} AED')));
     }
 
-    cells.add(DataCell(Text(isHoliday ? 'Holiday' : 'Normal')));
-
-    if (showApproval) {
-      cells.add(
-        DataCell(
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: ovt['approved'] == true
-                  ? Colors.green[100]
-                  : ovt['approved'] == false
-                      ? Colors.red[100]
-                      : Colors.grey[200],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              ovt['approved'] == true
-                  ? 'Approved'
-                  : ovt['approved'] == false
-                      ? 'Not Approved'
-                      : 'Pending',
-              style: TextStyle(
-                color: ovt['approved'] == true
-                    ? Colors.green[800]
-                    : ovt['approved'] == false
-                        ? Colors.red[800]
-                        : Colors.grey[600],
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
     cells.add(DataCell(Text(ovt['created_by_name'] ?? '')));
-    cells.add(DataCell(Text(ovt['approved_by_name'] ?? '')));
 
     if (showEdit || showDelete) {
       cells.add(
@@ -217,7 +168,7 @@ class OvertimeDataTable extends DataTableSource {
   bool get isRowCountApproximate => false;
 
   @override
-  int get rowCount => overtime.length;
+  int get rowCount => attendance.length;
 
   @override
   int get selectedRowCount => 0;
