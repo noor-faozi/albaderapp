@@ -45,8 +45,8 @@ class _OvertimeScreenState extends State<OvertimeScreen> {
           children: [
             Center(
               child: CustomButton(
-                widthFactor: 0.85,
-                heightFactor: 0.12,
+                widthFactor: 0.8,
+                heightFactor: 0.1,
                 label: 'Approve Records',
                 onPressed: () {
                   Navigator.push(

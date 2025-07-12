@@ -1,5 +1,7 @@
 import 'package:albaderapp/auth/auth_service.dart';
 import 'package:albaderapp/layouts/common_drawer.dart';
+import 'package:albaderapp/screens/supervisor/attendance_screen.dart';
+import 'package:albaderapp/screens/supervisor/overtime_screen.dart';
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +22,10 @@ class _SupervisorLayoutState extends State<SupervisorLayout> {
   String userRole = 'Loading...';
   String userEmail = 'Loading...';
 
-  final List<Widget> _screens = [];
+  final List<Widget> _screens = [
+    const AttendanceScreen(),
+    const OvertimeScreen()
+  ];
 
   @override
   void initState() {
