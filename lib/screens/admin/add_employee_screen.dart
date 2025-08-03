@@ -87,10 +87,9 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
 
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 5000), () {
-      _loadGeneratedUsername(); 
+      _loadGeneratedUsername();
     });
   }
-
 
   @override
   void dispose() {
@@ -99,7 +98,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     _nameController.removeListener(_onNameChanged);
     _usernameController.removeListener(() {
       _usernameManuallyEdited = true;
-    });    _professionController.dispose();
+    });
+    _professionController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     _salaryController.dispose();
@@ -301,59 +301,68 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
           ),
         );
         Navigator.pop(context);
-       } else {
-  // Call Edge Function instead of signUp()
-  final response = await http.post(
-    Uri.parse('https://twlxilnxparfazvmfoaw.functions.supabase.co/create-employee'),
-    headers: {'Authorization': 'Bearer API_SECRET_KEY',
-    'Content-Type': 'application/json'},
-    body: jsonEncode({
-      'email': email,
-      'password': password,
-      'email_confirm': true,
-      'email_confirmed_at': formattedTime,
-      'metadata': {
-        'role': 'employee',
-        'full_name': name,
-        'username': username,
-      },
-    }),
-  );
+      } else {
+        final session = supabase.auth.currentSession;
+        final accessToken = session?.accessToken;
 
-  if (response.statusCode != 200) {
-    throw Exception('Failed to create user: ${response.body}');
-  }
+        if (accessToken == null) {
+          print('User not logged in');
+          return;
+        }
+        final response = await http.post(
+          Uri.parse(
+              'https://twlxilnxparfazvmfoaw.supabase.co/functions/v1/create-employee'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $accessToken',
+          },
+          body: jsonEncode({
+            'email': email,
+            'password': password,
+            'email_confirm': true,
+            'email_confirmed_at': formattedTime,
+            'metadata': {
+              'role': 'employee',
+              'full_name': name,
+              'username': username,
+            },
+          }),
+        );
 
-  final data = jsonDecode(response.body);
-  final userId = data['user']['id'];
-  if (userId == null) throw Exception("User creation failed.");
+        if (response.statusCode != 200) {
+          print('Response body: ${response.body}');
+          throw Exception('Failed to create user: ${response.body}');
+        }
 
-  await supabase.from('profiles').insert({
-    'id': userId,
-    'username': username,
-    'role': 'employee',
-    'full_name': name,
-  });
+        final data = jsonDecode(response.body);
+        final userId = data['user']['id'];
+        if (userId == null) throw Exception("User creation failed.");
 
-  await supabase.from('employees').insert({
-    'id': employeeId,
-    'user_id': userId,
-    'name': name,
-    'profession': profession,
-    'salary': salary,
-    'allowance': allowance
-  });
+        await supabase.from('profiles').insert({
+          'id': userId,
+          'username': username,
+          'role': 'employee',
+          'full_name': name,
+        });
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: const Text('Employee created successfully.'),
-      backgroundColor: Colors.green.shade700,
-    ),
-  );
+        await supabase.from('employees').insert({
+          'id': employeeId,
+          'user_id': userId,
+          'name': name,
+          'profession': profession,
+          'basic_salary': salary,
+          'other_allowance': allowance
+        });
 
-  Navigator.pop(context);
-}
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Employee created successfully.'),
+            backgroundColor: Colors.green.shade700,
+          ),
+        );
 
+        Navigator.pop(context);
+      }
     } catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
@@ -364,38 +373,37 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
 
   final supabase = Supabase.instance.client;
 
-Future<String> _generateUsername(String name) async {
-  final parts = name.trim().split(RegExp(r'\s+'));
-  String base;
+  Future<String> _generateUsername(String name) async {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    String base;
 
-  if (parts.length == 1) {
-    base = parts.first.toLowerCase();
-  } else {
-    base = "${parts.first.toLowerCase()}.${parts.last.toLowerCase()}";
+    if (parts.length == 1) {
+      base = parts.first.toLowerCase();
+    } else {
+      base = "${parts.first.toLowerCase()}.${parts.last.toLowerCase()}";
+    }
+
+    String username = base;
+    int counter = 1;
+
+    // Only add number if the base username already exists
+    while (await _usernameExists(username)) {
+      username = "$base$counter";
+      counter++;
+    }
+
+    return username;
   }
 
-  String username = base;
-  int counter = 1;
+  Future<bool> _usernameExists(String username) async {
+    final response = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .maybeSingle();
 
-  // Only add number if the base username already exists
-  while (await _usernameExists(username)) {
-    username = "$base$counter";
-    counter++;
+    return response != null;
   }
-
-  return username;
-}
-
-Future<bool> _usernameExists(String username) async {
-  final response = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('username', username)
-      .maybeSingle();
-
-  return response != null;
-}
-
 
   String _generateEmail(String username) {
     return "$username@albadergroup.ae";
