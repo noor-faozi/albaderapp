@@ -305,7 +305,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   // Call Edge Function instead of signUp()
   final response = await http.post(
     Uri.parse('https://twlxilnxparfazvmfoaw.functions.supabase.co/create-employee'),
-    headers: {'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3bHhpbG54cGFyZmF6dm1mb2F3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODE3NTkxNCwiZXhwIjoyMDYzNzUxOTE0fQ.sFO9HD_K-kfM1VcX3E5E5W94UZPjzeUJJ4zI4lhpxh4',
+    headers: {'Authorization': 'Bearer API_SECRET_KEY',
     'Content-Type': 'application/json'},
     body: jsonEncode({
       'email': email,
