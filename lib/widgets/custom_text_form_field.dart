@@ -68,7 +68,13 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
       readOnly: widget.isReadOnly,
       inputFormatters: widget.inputFormatters,
       decoration: InputDecoration(
+        errorMaxLines: 2,
         labelText: widget.labelText,
+        errorStyle: const TextStyle(
+          height: 1.5, // Add line spacing
+          fontSize: 12, // Make sure it's not too big
+          overflow: TextOverflow.visible,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
         ),

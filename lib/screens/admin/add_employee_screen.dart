@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:math';
+import 'dart:convert';
+import 'package:intl/intl.dart';
 
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/widgets/custom_button.dart';
@@ -10,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:albaderapp/utils/responsive.dart';
+import 'package:http/http.dart' as http;
 
 class AddEmployeeScreen extends StatefulWidget {
   final Map<String, dynamic>? employeeRecord; // For editing
@@ -35,6 +39,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   String? _generatedPassword;
   bool _showPassword = false;
   String? _employeeIdUniqueError;
+  Timer? _debounce;
 
   bool _usernameManuallyEdited = false;
   bool _passwordManuallyEdited = false;
@@ -61,33 +66,39 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     _usernameController.addListener(() {
       _usernameManuallyEdited = true;
     });
-
     _passwordController.addListener(() {
       _passwordManuallyEdited = true;
     });
 
-    _nameController.addListener(() {
-      final name = _nameController.text.trim();
-      if (name.isNotEmpty) {
-        final username = _generateUsername(name);
-        final password = _generatePassword();
+    _nameController.addListener(_onNameChanged);
+  }
 
-        setState(() {
-          if (!_usernameManuallyEdited) {
-            _usernameController.text = username;
-          }
-          if (!_passwordManuallyEdited) {
-            _passwordController.text = password;
-          }
-        });
+  void _loadGeneratedUsername() async {
+    String username = await _generateUsername(_nameController.text);
+    setState(() {
+      if (!_usernameManuallyEdited && widget.employeeRecord == null) {
+        _usernameController.text = username;
       }
+    });
+  }
+
+  void _onNameChanged() {
+    if (_usernameManuallyEdited) return;
+
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 5000), () {
+      _loadGeneratedUsername();
     });
   }
 
   @override
   void dispose() {
     _employeeIdController.dispose();
-    _nameController.dispose();
+    _debounce?.cancel();
+    _nameController.removeListener(_onNameChanged);
+    _usernameController.removeListener(() {
+      _usernameManuallyEdited = true;
+    });
     _professionController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
@@ -151,10 +162,6 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                         if (value == null || value.isEmpty) {
                           return "Enter username";
                         }
-                        // Check username contains at least one number
-                        if (!RegExp(r'\d').hasMatch(value)) {
-                          return "Username must contain at least one number";
-                        }
                         return null;
                       },
                       prefixIcon: const Icon(Icons.person_outline_rounded),
@@ -169,7 +176,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                       validator: (val) {
                         if (val == null || val.isEmpty) return 'Enter password';
                         if (!_isStrongPassword(val)) {
-                          return 'Password must be at least 8 characters, include uppercase, lowercase, number, and special character';
+                          return 'Password must be at least 8 characters, include uppercase, lowercase, number, and special character.';
                         }
                         return null;
                       },
@@ -265,6 +272,9 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     final double? allowance = double.tryParse(allowanceText);
     final isEdit = widget.employeeRecord != null;
 
+    final now = DateTime.now();
+    final formattedTime = DateFormat('dd MMM, yyyy HH:mm').format(now);
+
     try {
       if (isEdit) {
         final id = widget.employeeRecord!['id'];
@@ -292,9 +302,40 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         );
         Navigator.pop(context);
       } else {
-        final authRes =
-            await supabase.auth.signUp(email: email, password: password);
-        final userId = authRes.user?.id;
+        final session = supabase.auth.currentSession;
+        final accessToken = session?.accessToken;
+
+        if (accessToken == null) {
+          print('User not logged in');
+          return;
+        }
+        final response = await http.post(
+          Uri.parse(
+              'https://twlxilnxparfazvmfoaw.supabase.co/functions/v1/create-employee'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $accessToken',
+          },
+          body: jsonEncode({
+            'email': email,
+            'password': password,
+            'email_confirm': true,
+            'email_confirmed_at': formattedTime,
+            'metadata': {
+              'role': 'employee',
+              'full_name': name,
+              'username': username,
+            },
+          }),
+        );
+
+        if (response.statusCode != 200) {
+          print('Response body: ${response.body}');
+          throw Exception('Failed to create user: ${response.body}');
+        }
+
+        final data = jsonDecode(response.body);
+        final userId = data['user']['id'];
         if (userId == null) throw Exception("User creation failed.");
 
         await supabase.from('profiles').insert({
@@ -309,8 +350,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
           'user_id': userId,
           'name': name,
           'profession': profession,
-          'salary': salary,
-          'allowance': allowance
+          'basic_salary': salary,
+          'other_allowance': allowance
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -330,47 +371,42 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     }
   }
 
-  String _generateUsername(String name) {
-    final base = name.toLowerCase().replaceAll(RegExp(r'\s+'), '.');
-    final randNumbers = Random().nextInt(9000) + 1000; // 4 digit number
-    return "$base$randNumbers";
+  final supabase = Supabase.instance.client;
+
+  Future<String> _generateUsername(String name) async {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    String base;
+
+    if (parts.length == 1) {
+      base = parts.first.toLowerCase();
+    } else {
+      base = "${parts.first.toLowerCase()}.${parts.last.toLowerCase()}";
+    }
+
+    String username = base;
+    int counter = 1;
+
+    // Only add number if the base username already exists
+    while (await _usernameExists(username)) {
+      username = "$base$counter";
+      counter++;
+    }
+
+    return username;
+  }
+
+  Future<bool> _usernameExists(String username) async {
+    final response = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .maybeSingle();
+
+    return response != null;
   }
 
   String _generateEmail(String username) {
-    return "$username@albader.com";
-  }
-
-  String _generatePassword({int length = 10}) {
-    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-    const digits = '0123456789';
-    const specialChars = '!@#\$%&*';
-    const allChars = uppercase + lowercase + digits + specialChars;
-    const lettersAndDigits = uppercase + lowercase + digits;
-
-    final rand = Random.secure();
-
-    // Pick one from each required category
-    final upper = uppercase[rand.nextInt(uppercase.length)];
-    final lower = lowercase[rand.nextInt(lowercase.length)];
-    final digit = digits[rand.nextInt(digits.length)];
-    final special = specialChars[rand.nextInt(specialChars.length)];
-
-    // First char must be alphanumeric
-    final firstChar = lettersAndDigits[rand.nextInt(lettersAndDigits.length)];
-
-    // Fill the rest of the password
-    List<String> rest = List.generate(length - 5, (_) {
-      return allChars[rand.nextInt(allChars.length)];
-    });
-
-    // Add required character types (except firstChar, already included)
-    rest.addAll([upper, lower, digit, special]);
-
-    // Shuffle the rest (excluding the first character)
-    rest.shuffle(rand);
-
-    return firstChar + rest.join();
+    return "$username@albadergroup.ae";
   }
 
   bool _isStrongPassword(String password) {

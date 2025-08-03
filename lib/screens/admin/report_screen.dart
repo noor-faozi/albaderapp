@@ -1,5 +1,4 @@
 import 'package:albaderapp/utils/responsive.dart';
-import 'package:albaderapp/widgets/custom_app_bar.dart';
 import 'package:albaderapp/widgets/search_input.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -81,7 +80,7 @@ class _ReportScreenState extends State<ReportScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-Container(
+            Container(
               margin: EdgeInsets.only(bottom: padding * 1.5),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -124,7 +123,7 @@ Container(
                     const Text("Work Order Report",
                         style: TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 6),
+                    const SizedBox(height: 6),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -145,7 +144,6 @@ Container(
                         ),
                       ],
                     ),
-
                     SizedBox(height: padding),
                     SearchInput(
                       controller: _workOrderController,
@@ -201,8 +199,8 @@ Container(
                     const Text("Project Report",
                         style: TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 6),
-Row(
+                    const SizedBox(height: 6),
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Icon(Icons.info_outline,
@@ -222,7 +220,6 @@ Row(
                         ),
                       ],
                     ),
-
                     SizedBox(height: padding),
                     SearchInput(
                       controller: _projectController,
