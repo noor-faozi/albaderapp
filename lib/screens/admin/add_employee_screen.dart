@@ -31,8 +31,11 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   final _professionController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _salaryController = TextEditingController();
-  final _allowanceController = TextEditingController();
+  final _basicSalaryController = TextEditingController();
+  final _otherAllowanceController = TextEditingController();
+  final _houseAndRelevanceController = TextEditingController();
+  String? _selectedDepartment;
+List<Map<String, dynamic>> _departments = [];
 
   bool _isLoading = false;
   String? _generatedUsername;
@@ -47,6 +50,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   @override
   void initState() {
     super.initState();
+    _loadDepartments();
 
     // If editing an existing employee, pre-fill the form
     if (widget.employeeRecord != null) {
@@ -55,8 +59,11 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
       _nameController.text = record['name'] ?? '';
       _professionController.text = record['profession'] ?? '';
       _usernameController.text = record['username'] ?? '';
-      _salaryController.text = record['salary']?.toString() ?? '';
-      _allowanceController.text = record['allowance']?.toString() ?? '';
+      _basicSalaryController.text = record['basic_salary']?.toString() ?? '';
+      _otherAllowanceController.text = record['other_allowance']?.toString() ?? '';
+      _houseAndRelevanceController.text =
+          record['housing_and_relevance_allowance']?.toString() ?? '';
+      _selectedDepartment = record['department_id'];
 
       // Avoid overwriting the username/password on name change
       _usernameManuallyEdited = true;
@@ -66,12 +73,29 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     _usernameController.addListener(() {
       _usernameManuallyEdited = true;
     });
+
     _passwordController.addListener(() {
       _passwordManuallyEdited = true;
     });
 
     _nameController.addListener(_onNameChanged);
   }
+
+  Future<void> _loadDepartments() async {
+  try {
+    final response = await Supabase.instance.client
+        .from('departments')
+        .select('id, name')
+        .order('name');
+
+    setState(() {
+      _departments = List<Map<String, dynamic>>.from(response);
+    });
+  } catch (error) {
+    print('Error loading departments: $error');
+  }
+}
+
 
   void _loadGeneratedUsername() async {
     String username = await _generateUsername(_nameController.text);
@@ -102,8 +126,10 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     _professionController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
-    _salaryController.dispose();
-    _allowanceController.dispose();
+    _basicSalaryController.dispose();
+    _otherAllowanceController.dispose();
+    _houseAndRelevanceController.dispose();
+
     super.dispose();
   }
 
@@ -183,6 +209,49 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                     ),
                     SizedBox(height: screenHeight(context, 0.025)),
                   ],
+                 DropdownButtonFormField<dynamic>(
+                    value: _selectedDepartment,
+                    items: _departments.map((dept) {
+                      return DropdownMenuItem<dynamic>(
+                        value: dept['id'], // store id here
+                        child: Text(dept['name'],
+                            style:
+                                const TextStyle(fontWeight: FontWeight.normal)),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedDepartment = value;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'Department',
+                      prefixIcon: const Icon(
+                        Icons.apartment_rounded,
+                        color: gray500,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                          color: gray500,
+                          width: 1.2,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                          color: firstColor,
+                          width: 1.8,
+                        ),
+                      ),
+                    ),
+                    validator: (value) =>
+                        value == null ? 'Select department' : null,
+                  ),
+                  SizedBox(height: screenHeight(context, 0.025)),
                   CustomTextFormField(
                     controller: _professionController,
                     labelText: "Profession",
@@ -193,23 +262,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                   ),
                   SizedBox(height: screenHeight(context, 0.025)),
                   CustomTextFormField(
-                    controller: _salaryController,
-                    labelText: "Salary (AED)",
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                        RegExp(r'^\d+\.?\d{0,2}$|^\d*\.?$'),
-                      ),
-                    ],
-                    validator: (value) =>
-                        value == null || value.isEmpty ? "Enter Salary" : null,
-                    prefixIcon: const Icon(Icons.payments_rounded),
-                  ),
-                  SizedBox(height: screenHeight(context, 0.025)),
-                  CustomTextFormField(
-                    controller: _allowanceController,
-                    labelText: "Allowance (AED)",
+                    controller: _basicSalaryController,
+                    labelText: "Basic Salary (AED)",
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
@@ -218,7 +272,39 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                       ),
                     ],
                     validator: (value) => value == null || value.isEmpty
-                        ? "Enter Allowance"
+                        ? "Enter Basic Salary"
+                        : null,
+                    prefixIcon: const Icon(Icons.payments_rounded),
+                  ),
+                  SizedBox(height: screenHeight(context, 0.025)),
+                  CustomTextFormField(
+                    controller: _houseAndRelevanceController,
+                    labelText: "House and Relevance (AED)",
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d{0,2}$|^\d*\.?$'),
+                      ),
+                    ],
+                    validator: (value) => value == null || value.isEmpty
+                        ? "Enter House and Relevance"
+                        : null,
+                    prefixIcon: const Icon(Icons.home_work_outlined),
+                  ),
+                  SizedBox(height: screenHeight(context, 0.025)),
+                  CustomTextFormField(
+                    controller: _otherAllowanceController,
+                    labelText: "Other Allowance (AED)",
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d{0,2}$|^\d*\.?$'),
+                      ),
+                    ],
+                    validator: (value) => value == null || value.isEmpty
+                        ? "Enter Other Allowance"
                         : null,
                     prefixIcon: const Icon(Icons.payments_outlined),
                   ),
@@ -265,11 +351,12 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     final username = _usernameController.text.trim().toLowerCase();
     final email = _generateEmail(username);
     final password = _passwordController.text;
-    final salaryText = _salaryController.text.trim();
-    final allowanceText = _allowanceController.text.trim();
+    final salaryText = _basicSalaryController.text.trim();
+    final otherAllowanceText = _otherAllowanceController.text.trim();
+    final houseAndRelevanceText = _houseAndRelevanceController.text.trim();
 
     final double? salary = double.tryParse(salaryText);
-    final double? allowance = double.tryParse(allowanceText);
+    final double? allowance = double.tryParse(otherAllowanceText);
     final isEdit = widget.employeeRecord != null;
 
     final now = DateTime.now();
@@ -282,8 +369,10 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         await supabase.from('employees').update({
           'name': name,
           'profession': profession,
-          'salary': salary,
-          'allowance': allowance,
+          'basic_salary': salary,
+          'other_allowance': allowance,
+          'housing_and_relevance_allowance': houseAndRelevanceText,
+          'department_id': _selectedDepartment,
         }).eq('id', id);
 
         // update profile name
@@ -330,7 +419,6 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         );
 
         if (response.statusCode != 200) {
-          print('Response body: ${response.body}');
           throw Exception('Failed to create user: ${response.body}');
         }
 
@@ -351,7 +439,9 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
           'name': name,
           'profession': profession,
           'basic_salary': salary,
-          'other_allowance': allowance
+          'other_allowance': allowance,
+          'housing_and_relevance_allowance': houseAndRelevanceText,
+          'department_id': _selectedDepartment,
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
