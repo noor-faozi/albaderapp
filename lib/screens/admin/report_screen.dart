@@ -1,3 +1,4 @@
+import 'package:albaderapp/screens/admin/project_excel_export.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/widgets/search_input.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,11 @@ class ReportScreen extends StatefulWidget {
 class _ReportScreenState extends State<ReportScreen> {
   final TextEditingController _workOrderController = TextEditingController();
   final TextEditingController _projectController = TextEditingController();
+  final TextEditingController _fromDateController = TextEditingController();
+  final TextEditingController _toDateController = TextEditingController();
+
+  DateTime? _fromDate;
+  DateTime? _toDate;
 
   bool workOrderNotFound = false;
   bool projectNotFound = false;
@@ -22,31 +28,6 @@ class _ReportScreenState extends State<ReportScreen> {
   double? projectTotalCost;
 
   final supabase = Supabase.instance.client;
-
-  Future<double> fetchWorkOrderCost(String workOrderID) async {
-    double total = 0.0;
-
-    final attendanceData = await supabase
-        .from('attendance')
-        .select('amount')
-        .eq('work_order_id', workOrderID);
-
-    for (var row in attendanceData) {
-      total += (row['amount'] ?? 0);
-    }
-
-    final overtimeData = await supabase
-        .from('overtime')
-        .select('amount')
-        .eq('work_order_id', workOrderID)
-        .eq('approved', true);
-
-    for (var row in overtimeData) {
-      total += (row['amount'] ?? 0);
-    }
-
-    return total;
-  }
 
   Future<void> fetchProjectCosts(String projectID) async {
     final workOrders = await supabase
@@ -60,7 +41,7 @@ class _ReportScreenState extends State<ReportScreen> {
     for (var row in workOrders) {
       final woId = row['id'];
       final cost = await fetchWorkOrderCost(woId);
-      total += cost;
+      total += cost!;
       results.add({'workOrderId': woId, 'cost': cost});
     }
 
@@ -68,6 +49,78 @@ class _ReportScreenState extends State<ReportScreen> {
       projectWorkOrders = results;
       projectTotalCost = total;
     });
+  }
+
+Future<double?> fetchWorkOrderCost(String workOrderID) async {
+    final workOrderExists = await supabase
+        .from('work_orders')
+        .select('id')
+        .eq('id', workOrderID)
+        .maybeSingle();
+
+    if (workOrderExists == null) {
+      // Work order doesn't exist
+      return null;
+    }
+
+    double total = 0.0;
+
+    var attendanceQuery = supabase
+        .from('attendance')
+        .select('amount')
+        .eq('work_order_id', workOrderID);
+
+    var overtimeQuery = supabase
+        .from('overtime')
+        .select('amount')
+        .eq('work_order_id', workOrderID)
+        .eq('approved', true);
+
+    if (_fromDate != null) {
+      attendanceQuery =
+          attendanceQuery.gte('date', _fromDate!.toIso8601String());
+      overtimeQuery = overtimeQuery.gte('date', _fromDate!.toIso8601String());
+    }
+    if (_toDate != null) {
+      attendanceQuery = attendanceQuery.lte('date', _toDate!.toIso8601String());
+      overtimeQuery = overtimeQuery.lte('date', _toDate!.toIso8601String());
+    }
+
+    final attendanceData = await attendanceQuery;
+    final overtimeData = await overtimeQuery;
+
+    for (var row in attendanceData) {
+      total += (row['amount'] ?? 0);
+    }
+    for (var row in overtimeData) {
+      total += (row['amount'] ?? 0);
+    }
+
+    return total;
+  }
+
+
+  Future<void> _selectDate(BuildContext context,
+      TextEditingController controller, bool isFrom) async {
+    final initialDate = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (picked != null) {
+      setState(() {
+        controller.text =
+            "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+        if (isFrom) {
+          _fromDate = picked;
+        } else {
+          _toDate = picked;
+        }
+      });
+    }
   }
 
   @override
@@ -127,7 +180,7 @@ class _ReportScreenState extends State<ReportScreen> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.info_outline,
+                        const Icon(Icons.info_outline,
                             size: 18, color: Colors.blueGrey),
                         const SizedBox(width: 6),
                         Expanded(
@@ -145,6 +198,50 @@ class _ReportScreenState extends State<ReportScreen> {
                       ],
                     ),
                     SizedBox(height: padding),
+                    // Replace your date input section with this simpler version:
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () =>
+                                _selectDate(context, _fromDateController, true),
+                            child: AbsorbPointer(
+                              child: TextFormField(
+                                controller: _fromDateController,
+                                decoration: InputDecoration(
+                                  labelText: 'From Date',
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                  suffixIcon: const Icon(Icons.calendar_today),
+                                ),
+                                readOnly: true,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () =>
+                                _selectDate(context, _toDateController, false),
+                            child: AbsorbPointer(
+                              child: TextFormField(
+                                controller: _toDateController,
+                                decoration: InputDecoration(
+                                  labelText: 'To Date',
+                                  border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8)),
+                                  suffixIcon: const Icon(Icons.calendar_today),
+                                ),
+                                readOnly: true,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: padding),
+
                     SearchInput(
                       controller: _workOrderController,
                       label: 'Enter Work Order ID',
@@ -152,7 +249,8 @@ class _ReportScreenState extends State<ReportScreen> {
                         final cost = await fetchWorkOrderCost(
                             _workOrderController.text.trim());
                         setState(() {
-                          if (cost == 0) {
+                          if (cost == null) {
+                            // Work order not found
                             workOrderNotFound = true;
                             workOrderCost = null;
                           } else {
@@ -171,7 +269,17 @@ class _ReportScreenState extends State<ReportScreen> {
                               color: Colors.red, fontWeight: FontWeight.bold),
                         ),
                       ),
-                    if (workOrderCost != null)
+                    if (workOrderCost == 0 && !workOrderNotFound)
+                      Padding(
+                        padding: EdgeInsets.only(top: padding),
+                        child: const Text(
+                          'No labour cost found in selected date range.',
+                          style: TextStyle(
+                              color: Colors.orange,
+                              fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    if (workOrderCost != null && workOrderCost != 0)
                       Padding(
                         padding: EdgeInsets.only(top: padding),
                         child: Text(
@@ -221,6 +329,50 @@ class _ReportScreenState extends State<ReportScreen> {
                       ],
                     ),
                     SizedBox(height: padding),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () =>
+                                _selectDate(context, _fromDateController, true),
+                            child: AbsorbPointer(
+                              child: TextFormField(
+                                controller: _fromDateController,
+                                decoration: InputDecoration(
+                                  labelText: 'From Date',
+                                  border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8)),
+                                  suffixIcon: const Icon(Icons.calendar_today),
+                                ),
+                                readOnly: true,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () =>
+                                _selectDate(context, _toDateController, false),
+                            child: AbsorbPointer(
+                              child: TextFormField(
+                                controller: _toDateController,
+                                decoration: InputDecoration(
+                                  labelText: 'To Date',
+                                  border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8)),
+                                  suffixIcon: const Icon(Icons.calendar_today),
+                                ),
+                                readOnly: true,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: padding),
+
                     SearchInput(
                       controller: _projectController,
                       label: 'Enter Project ID',
@@ -245,6 +397,16 @@ class _ReportScreenState extends State<ReportScreen> {
                               color: Colors.red, fontWeight: FontWeight.bold),
                         ),
                       ),
+                    if (projectTotalCost == 0 && !projectNotFound)
+                      Padding(
+                        padding: EdgeInsets.only(top: padding),
+                        child: const Text(
+                          'No labour cost found for this project in selected date range.',
+                          style: TextStyle(
+                              color: Colors.orange,
+                              fontWeight: FontWeight.w500),
+                        ),
+                      ),
                     if (projectWorkOrders.isNotEmpty) ...[
                       SizedBox(height: padding),
                       const Text('Work Orders:',
@@ -266,8 +428,48 @@ class _ReportScreenState extends State<ReportScreen> {
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
+
+                      const SizedBox(height: 12),
+
+                       ElevatedButton.icon(
+                        onPressed: () async {
+                          try {
+                            await exportProjectReportToExcel(
+                              projectId: _projectController.text.trim(),
+                              fromDate: _fromDate!,
+                              toDate: _toDate!,
+                              workOrders: projectWorkOrders,
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Excel exported successfully')),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Export failed: $e')),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.download, size: 20),
+                        label: const Text(
+                          'Export to Excel',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w500),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          backgroundColor: Colors.blueAccent,
+                          foregroundColor: Colors.white,
+                          elevation: 3,
+                        ),
+                      ),
                     ],
-                  ],
+                                    ],
+                  
                 ),
               ),
             ),
