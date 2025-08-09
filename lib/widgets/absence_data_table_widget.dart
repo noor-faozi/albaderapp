@@ -2,17 +2,17 @@ import 'package:albaderapp/utils/time_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:albaderapp/widgets/styled_date_table.dart';
 
-class AttendanceDataTableWidget extends StatefulWidget {
-  final List<Map<String, dynamic>> attendance;
+class AbsenceDataTableWidget extends StatefulWidget {
+  final List<Map<String, dynamic>> absence;
   final void Function(Map<String, dynamic>)? onEdit;
   final void Function(Map<String, dynamic>)? onDelete;
   final bool showEdit;
   final bool showDelete;
   final bool showAmount;
 
-  const AttendanceDataTableWidget({
+  const AbsenceDataTableWidget({
     super.key,
-    required this.attendance,
+    required this.absence,
     this.onEdit,
     this.onDelete,
     this.showEdit = true,
@@ -21,11 +21,10 @@ class AttendanceDataTableWidget extends StatefulWidget {
   });
 
   @override
-  State<AttendanceDataTableWidget> createState() =>
-      _AttendanceDataTableWidgetState();
+  State<AbsenceDataTableWidget> createState() => _AbsenceDataTableWidgetState();
 }
 
-class _AttendanceDataTableWidgetState extends State<AttendanceDataTableWidget> {
+class _AbsenceDataTableWidgetState extends State<AbsenceDataTableWidget> {
   late AttendanceDataTable _data;
 
   @override
@@ -35,16 +34,16 @@ class _AttendanceDataTableWidgetState extends State<AttendanceDataTableWidget> {
   }
 
   @override
-  void didUpdateWidget(covariant AttendanceDataTableWidget oldWidget) {
+  void didUpdateWidget(covariant AbsenceDataTableWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.attendance != widget.attendance) {
+    if (oldWidget.absence != widget.absence) {
       _data = _buildDataSource();
     }
   }
 
   AttendanceDataTable _buildDataSource() {
     return AttendanceDataTable(
-      attendance: widget.attendance,
+      absence: widget.absence,
       onEdit: widget.onEdit,
       onDelete: widget.onDelete,
       showEdit: widget.showEdit,
@@ -60,10 +59,8 @@ class _AttendanceDataTableWidgetState extends State<AttendanceDataTableWidget> {
       const DataColumn(label: Text('Name')),
       const DataColumn(label: Text('Profession')),
       const DataColumn(label: Text('Date')),
-      const DataColumn(label: Text('W/O ID')),
-      const DataColumn(label: Text('In Time')),
-      const DataColumn(label: Text('Out Time')),
       const DataColumn(label: Text('Total Hours')),
+      const DataColumn(label: Text('Sick Leave')),
     ];
 
     if (widget.showAmount) {
@@ -83,7 +80,7 @@ class _AttendanceDataTableWidgetState extends State<AttendanceDataTableWidget> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: StyledDataTable(
           child: PaginatedDataTable(
-            header: const Text('Attendance Records'),
+            header: const Text('absence Records'),
             rowsPerPage: 7,
             columns: columns,
             source: _data,
@@ -95,7 +92,7 @@ class _AttendanceDataTableWidgetState extends State<AttendanceDataTableWidget> {
 }
 
 class AttendanceDataTable extends DataTableSource {
-  final List<Map<String, dynamic>> attendance;
+  final List<Map<String, dynamic>> absence;
   final void Function(Map<String, dynamic>)? onEdit;
   final void Function(Map<String, dynamic>)? onDelete;
   final bool showEdit;
@@ -103,7 +100,7 @@ class AttendanceDataTable extends DataTableSource {
   final bool showAmount;
 
   AttendanceDataTable({
-    required this.attendance,
+    required this.absence,
     this.onEdit,
     this.onDelete,
     required this.showEdit,
@@ -113,30 +110,28 @@ class AttendanceDataTable extends DataTableSource {
 
   @override
   DataRow? getRow(int index) {
-    if (index >= attendance.length) return null;
-    final ovt = attendance[index];
+    if (index >= absence.length) return null;
+    final abs = absence[index];
 
     final rowColor = index % 2 == 0 ? Colors.white : Colors.grey[100];
 
     final cells = <DataCell>[
-      DataCell(Text(ovt['employee_id'].toString())),
-      DataCell(Text(ovt['employee_name'] ?? '')),
-      DataCell(Text(ovt['profession'] ?? '')),
-      DataCell(Text(ovt['date']?.toString().split('T').first ?? '')),
-      DataCell(Text(ovt['work_order_id'] ?? '')),
-      DataCell(Text(TimeUtils.formatTime(ovt['in_time']))),
-      DataCell(Text(TimeUtils.formatTime(ovt['out_time']))),
-      DataCell(Text(ovt['total_hours'] != null
-          ? TimeUtils.formatHoursToHM(ovt['total_hours'])
+      DataCell(Text(abs['employee_id'].toString())),
+      DataCell(Text(abs['employee_name'] ?? '')),
+      DataCell(Text(abs['profession'] ?? '')),
+      DataCell(Text(abs['date']?.toString().split('T').first ?? '')),
+      DataCell(Text(abs['total_hours'] != null
+          ? TimeUtils.formatHoursToHM(abs['total_hours'])
           : '')),
+      DataCell(Text(abs['is_sickleave'] == true ? 'Yes' : 'No')),
     ];
 
     if (showAmount) {
       cells.add(
-          DataCell(Text('${(ovt['amount'] ?? 0).toStringAsFixed(4)} AED')));
+          DataCell(Text('${(abs['amount'] ?? 0).toStringAsFixed(4)} AED')));
     }
 
-    cells.add(DataCell(Text(ovt['created_by_name'] ?? '')));
+    cells.add(DataCell(Text(abs['created_by_name'] ?? '')));
 
     if (showEdit || showDelete) {
       cells.add(
@@ -145,12 +140,12 @@ class AttendanceDataTable extends DataTableSource {
             if (showEdit && onEdit != null)
               IconButton(
                 icon: const Icon(Icons.edit, color: Colors.grey),
-                onPressed: () => onEdit!(ovt),
+                onPressed: () => onEdit!(abs),
               ),
             if (showDelete && onDelete != null)
               IconButton(
                 icon: const Icon(Icons.delete, color: Colors.grey),
-                onPressed: () => onDelete!(ovt),
+                onPressed: () => onDelete!(abs),
               ),
           ],
         )),
@@ -167,7 +162,7 @@ class AttendanceDataTable extends DataTableSource {
   bool get isRowCountApproximate => false;
 
   @override
-  int get rowCount => attendance.length;
+  int get rowCount => absence.length;
 
   @override
   int get selectedRowCount => 0;

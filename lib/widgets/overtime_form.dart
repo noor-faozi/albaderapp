@@ -1,4 +1,3 @@
-import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/utils/time_utils.dart';
 import 'package:albaderapp/widgets/custom_button.dart';
@@ -160,6 +159,30 @@ class _OvertimeFormState extends State<OvertimeForm> {
 
     final employeeId = _employee!['id'];
     final formattedDate = _selectedDate.toIso8601String().split('T').first;
+
+    final absence = await supabase
+        .from('absence_view')
+        .select('id, is_absent, is_sickleave')
+        .eq('employee_id', employeeId)
+        .eq('date', formattedDate)
+        .or('is_absent.eq.true,is_sickleave.eq.true')
+        .maybeSingle();
+
+    if (absence != null) {
+      String message =
+          'This employee already has an absence recorded for this date.';
+      if (absence['is_sickleave'] == true) {
+        message = 'Sick leave already recorded for this employee on this date.';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      setState(() => _isLoading = false);
+      return;
+    }
 
     //Check for existing overtime attendance for this employee on this date when creating new record
     if (widget.overtimeRecord == null) {

@@ -11,6 +11,7 @@ class SearchInput extends StatelessWidget {
   final double horizontalPadding;
   final double buttonHeight;
   final bool readOnly;
+  final bool enabled;
 
   const SearchInput({
     super.key,
@@ -22,6 +23,7 @@ class SearchInput extends StatelessWidget {
     this.horizontalPadding = 10,
     this.buttonHeight = 40,
     this.readOnly = false,
+    this.enabled = true,
   });
 
   @override
@@ -31,7 +33,8 @@ class SearchInput extends StatelessWidget {
         Expanded(
           child: TextFormField(
             controller: controller,
-            readOnly: readOnly,
+            readOnly: readOnly || !enabled,
+            enabled: enabled,
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
@@ -61,7 +64,7 @@ class SearchInput extends StatelessWidget {
           height: buttonHeight,
           child: CustomButton(
             label: 'Search',
-            onPressed: onSearch,
+            onPressed: enabled ? onSearch : null,
             textColor: Colors.grey[700],
           ),
         ),
