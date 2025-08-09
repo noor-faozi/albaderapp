@@ -168,183 +168,218 @@ class _AttendanceFormState extends State<AttendanceForm> {
       _groupId = null;
     });
   }
-Future<void> _submitForm() async {
-  if (!_formKey.currentState!.validate()) return;
-  setState(() => _isLoading = true);
 
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final selectedDateOnly = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
 
-  if (selectedDateOnly.isAfter(today)) {
-    setState(() {
-      _dateError = 'Date cannot be in the future.';
-      _isLoading = false;
-    });
-    return;
-  } else {
-    _dateError = null;
-  }
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final selectedDateOnly =
+        DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
 
-  if (_totalHours == null || _totalHours! <= 0) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Total hours must be greater than 0.')),
-    );
-    setState(() => _isLoading = false);
-    return;
-  }
+    if (selectedDateOnly.isAfter(today)) {
+      setState(() {
+        _dateError = 'Date cannot be in the future.';
+        _isLoading = false;
+      });
+      return;
+    } else {
+      _dateError = null;
+    }
 
-  if (_workOrders.length > 1) {
-    final sumOfWoh = _workOrders.fold<double>(0.0, (sum, wo) => sum + (wo.hours ?? 0));
-    if ((sumOfWoh - _totalHours!).abs() > 0.01) {
+    if (_totalHours == null || _totalHours! <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Work order hours must sum to total hours.')),
+        const SnackBar(content: Text('Total hours must be greater than 0.')),
       );
       setState(() => _isLoading = false);
       return;
     }
-  }
 
-  final formattedDate = _selectedDate.toIso8601String().split('T').first;
-  final isHoliday = await supabase.from('holidays').select().eq('date', formattedDate).maybeSingle();
-  if (isHoliday != null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Date is a holiday. Submit overtime instead.'),
-        backgroundColor: Colors.red.shade700,
-      ),
-    );
-    setState(() => _isLoading = false);
-    return;
-  }
-
-  final user = supabase.auth.currentUser;
-  if (user == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('User not logged in')),
-    );
-    setState(() => _isLoading = false);
-    return;
-  }
-
-  final isEditing = widget.attendanceRecord != null;
-  final workOrderIds = _workOrders.map((wo) => wo.workOrder?['id'].toString()).whereType<String>().toSet();
-
-  String? groupId = _groupId;
-  if (_workOrders.length > 1) {
-    groupId ??= _uuid.v4();
-  } else {
-    final wo = _workOrders.first;
-    wo.hours = _totalHours;
-    groupId = null;
-  }
-
-  try {
-    final existingRecords = await supabase
-      .from('attendance')
-      .select()
-      .eq('employee_id', _employee!['id'])
-      .eq('date', formattedDate);
-
-    final existingMap = <String, Map<String, dynamic>>{};
-    for (final record in existingRecords) {
-      final woId = record['work_order_id']?.toString();
-      if (woId != null) existingMap[woId] = record;
+    if (_workOrders.length > 1) {
+      final sumOfWoh =
+          _workOrders.fold<double>(0.0, (sum, wo) => sum + (wo.hours ?? 0));
+      if ((sumOfWoh - _totalHours!).abs() > 0.01) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Work order hours must sum to total hours.')),
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
     }
 
-    final existingWorkOrderIds = existingMap.keys.toSet();
-    final removedIds = existingWorkOrderIds.difference(workOrderIds);
-    final newIds = workOrderIds.difference(existingWorkOrderIds);
-    final sharedIds = workOrderIds.intersection(existingWorkOrderIds);
+    final formattedDate = _selectedDate.toIso8601String().split('T').first;
+    final isHoliday = await supabase
+        .from('holidays')
+        .select()
+        .eq('date', formattedDate)
+        .maybeSingle();
+    if (isHoliday != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Date is a holiday. Submit overtime instead.'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      setState(() => _isLoading = false);
+      return;
+    }
 
-    // Update shared
-    for (final wo in _workOrders) {
-      final woId = wo.workOrder?['id']?.toString();
-      if (woId == null || wo.hours == null) continue;
+    final absence = await supabase
+        .from('absence_view') 
+        .select('id, is_absent, is_sickleave')
+        .eq('employee_id', _employee!['id'])
+        .eq('date', formattedDate)
+        .or('is_absent.eq.true,is_sickleave.eq.true')
+        .maybeSingle();
 
-      if (sharedIds.contains(woId)) {
-        final record = existingMap[woId]!;
-        final changed = record['total_hours'] != wo.hours ||
-          record['in_time'] != _formatTime(_inTime!) ||
-          record['out_time'] != _formatTime(_outTime!) ||
-          record['group_id'] != groupId;
+    if (absence != null) {
+      String message =
+          'This employee already has an absence recorded for this date.';
+      if (absence['is_sickleave'] == true) {
+        message = 'Sick leave already recorded for this employee on this date.';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      setState(() => _isLoading = false);
+      return;
+    }
 
-        if (changed) {
-          await supabase.from('attendance').update({
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User not logged in')),
+      );
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    final isEditing = widget.attendanceRecord != null;
+    final workOrderIds = _workOrders
+        .map((wo) => wo.workOrder?['id'].toString())
+        .whereType<String>()
+        .toSet();
+
+    String? groupId = _groupId;
+    if (_workOrders.length > 1) {
+      groupId ??= _uuid.v4();
+    } else {
+      final wo = _workOrders.first;
+      wo.hours = _totalHours;
+      groupId = null;
+    }
+
+    try {
+      final existingRecords = await supabase
+          .from('attendance')
+          .select()
+          .eq('employee_id', _employee!['id'])
+          .eq('date', formattedDate);
+
+      final existingMap = <String, Map<String, dynamic>>{};
+      for (final record in existingRecords) {
+        final woId = record['work_order_id']?.toString();
+        if (woId != null) existingMap[woId] = record;
+      }
+
+      final existingWorkOrderIds = existingMap.keys.toSet();
+      final removedIds = existingWorkOrderIds.difference(workOrderIds);
+      final newIds = workOrderIds.difference(existingWorkOrderIds);
+      final sharedIds = workOrderIds.intersection(existingWorkOrderIds);
+
+      // Update shared
+      for (final wo in _workOrders) {
+        final woId = wo.workOrder?['id']?.toString();
+        if (woId == null || wo.hours == null) continue;
+
+        if (sharedIds.contains(woId)) {
+          final record = existingMap[woId]!;
+          final changed = record['total_hours'] != wo.hours ||
+              record['in_time'] != _formatTime(_inTime!) ||
+              record['out_time'] != _formatTime(_outTime!) ||
+              record['group_id'] != groupId;
+
+          if (changed) {
+            await supabase.from('attendance').update({
+              'employee_id': _employee!['id'],
+              'date': formattedDate,
+              'in_time': _formatTime(_inTime!),
+              'out_time': _formatTime(_outTime!),
+              'total_hours': wo.hours,
+              'created_by': user.id,
+              'group_id': groupId,
+            }).eq('id', record['id']);
+          }
+        }
+      }
+
+      // Insert new
+      for (final wo in _workOrders) {
+        final woId = wo.workOrder?['id']?.toString();
+        if (woId == null || wo.hours == null) continue;
+        if (newIds.contains(woId)) {
+          await supabase.from('attendance').insert({
             'employee_id': _employee!['id'],
             'date': formattedDate,
             'in_time': _formatTime(_inTime!),
             'out_time': _formatTime(_outTime!),
             'total_hours': wo.hours,
+            'work_order_id': wo.workOrder?['id'],
             'created_by': user.id,
             'group_id': groupId,
-          }).eq('id', record['id']);
+          });
         }
       }
-    }
 
-    // Insert new
-    for (final wo in _workOrders) {
-      final woId = wo.workOrder?['id']?.toString();
-      if (woId == null || wo.hours == null) continue;
-      if (newIds.contains(woId)) {
-        await supabase.from('attendance').insert({
-          'employee_id': _employee!['id'],
-          'date': formattedDate,
-          'in_time': _formatTime(_inTime!),
-          'out_time': _formatTime(_outTime!),
-          'total_hours': wo.hours,
-          'work_order_id': wo.workOrder?['id'],
-          'created_by': user.id,
-          'group_id': groupId,
-        });
+      // Delete removed
+      for (final id in removedIds) {
+        final recordId = existingMap[id]!['id'];
+        await supabase.from('attendance').delete().eq('id', recordId);
       }
-    }
 
-    // Delete removed
-    for (final id in removedIds) {
-      final recordId = existingMap[id]!['id'];
-      await supabase.from('attendance').delete().eq('id', recordId);
-    }
+      // Ungroup if only one record remains
+      if (groupId != null) {
+        final stillGrouped = await supabase
+            .from('attendance')
+            .select()
+            .eq('employee_id', _employee!['id'])
+            .eq('date', formattedDate)
+            .eq('group_id', groupId);
 
-    // Ungroup if only one record remains
-    if (groupId != null) {
-      final stillGrouped = await supabase
-        .from('attendance')
-        .select()
-        .eq('employee_id', _employee!['id'])
-        .eq('date', formattedDate)
-        .eq('group_id', groupId);
-
-      if (stillGrouped.length == 1) {
-        await supabase.from('attendance')
-          .update({'group_id': null})
-          .eq('id', stillGrouped.first['id']);
+        if (stillGrouped.length == 1) {
+          await supabase
+              .from('attendance')
+              .update({'group_id': null}).eq('id', stillGrouped.first['id']);
+        }
       }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Attendance submitted.'),
+          backgroundColor: Colors.green.shade700,
+        ),
+      );
+
+      if (isEditing) {
+        Navigator.pop(context);
+      } else {
+        _resetForm();
+      }
+
+      if (widget.onSubmitSuccess != null) widget.onSubmitSuccess!();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save attendance: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Attendance submitted.'),
-        backgroundColor: Colors.green.shade700,
-      ),
-    );
-
-    if (isEditing) {
-      Navigator.pop(context);
-    } else {
-      _resetForm();
-    }
-
-    if (widget.onSubmitSuccess != null) widget.onSubmitSuccess!();
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Failed to save attendance: $e')),
-    );
-  } finally {
-    setState(() => _isLoading = false);
   }
-}
 
   String _formatTime(TimeOfDay time) {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';

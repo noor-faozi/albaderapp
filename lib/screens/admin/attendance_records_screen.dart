@@ -1,7 +1,9 @@
+import 'package:albaderapp/screens/admin/edit_absence_screen.dart';
 import 'package:albaderapp/screens/admin/edit_attendance_screen.dart';
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/utils/time_utils.dart';
+import 'package:albaderapp/widgets/absence_data_table_widget.dart';
 import 'package:albaderapp/widgets/custom_secondary_app_bar.dart';
 import 'package:albaderapp/widgets/styled_date_table.dart';
 import 'package:flutter/material.dart';
@@ -20,22 +22,37 @@ class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
 
   String searchQuery = '';
   late Future<List<Map<String, dynamic>>> _attendanceFuture;
+  late Future<List<Map<String, dynamic>>> _absenceFuture;
 
   @override
   void initState() {
     super.initState();
     _attendanceFuture = fetchAttendanceData();
+    _absenceFuture = fetchAbsenceData();
   }
 
   Future<List<Map<String, dynamic>>> fetchAttendanceData() async {
-    final result =
-        await supabase.from('attendance_with_employee').select().order('date');
+    final result = await supabase
+        .from('attendance_with_employee')
+        .select()
+        .neq('is_absent', true)
+        .order('date');
+    return List<Map<String, dynamic>>.from(result);
+  }
+
+  Future<List<Map<String, dynamic>>> fetchAbsenceData() async {
+    final result = await supabase
+        .from('attendance_with_employee')
+        .select()
+        .eq('is_absent', true)
+        .order('date');
     return List<Map<String, dynamic>>.from(result);
   }
 
   Future<void> _refreshData() async {
     setState(() {
       _attendanceFuture = fetchAttendanceData();
+      _absenceFuture = fetchAbsenceData();
     });
   }
 
@@ -43,124 +60,200 @@ class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomSecondaryAppBar(title: "Attendance Records"),
-      body: Column(
-        children: [
-          Padding(
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
             padding: const EdgeInsets.all(16),
-            child: TextField(
-              decoration: const InputDecoration(
-                labelText: 'Search by ID',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-              onChanged: (val) {
-                setState(() {
-                  searchQuery = val.trim();
-                });
-              },
-            ),
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _refreshData,
-              child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: _attendanceFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return ListView(
-                      children: [
-                        const SizedBox(height: 100),
-                        Center(child: Text('Error: ${snapshot.error}')),
-                      ],
-                    );
-                  }
-                  if (!snapshot.hasData) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: firstColor),
-                    );
-                  }
-
-                  List<Map<String, dynamic>> attendance = snapshot.data!;
-
-                  if (searchQuery.isNotEmpty) {
-                    final id = int.tryParse(searchQuery);
-                    if (id != null) {
-                      attendance = attendance
-                          .where((e) => e['employee_id'] == id)
-                          .toList();
-                    } else {
-                      attendance = [];
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Search by ID',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (val) {
+                    setState(() {
+                      searchQuery = val.trim();
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _attendanceFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
                     }
-                  }
+                    if (!snapshot.hasData) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: CircularProgressIndicator(color: firstColor),
+                        ),
+                      );
+                    }
 
-                  return ListView(
-                    physics:
-                        const AlwaysScrollableScrollPhysics(),
-                    children: [
-                      OvertimeDataTableWidget(
-                        attendance: attendance,
-                        onEdit: (atd) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => EditAttendanceScreen(
-                                attendanceRecord:
-                                    atd,
+                    List<Map<String, dynamic>> attendance = snapshot.data!;
+                    if (searchQuery.isNotEmpty) {
+                      final id = int.tryParse(searchQuery);
+                      if (id != null) {
+                        attendance = attendance
+                            .where((e) => e['employee_id'] == id)
+                            .toList();
+                      } else {
+                        attendance = [];
+                      }
+                    }
+
+                    return OvertimeDataTableWidget(
+                      attendance: attendance,
+                      onEdit: (atd) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => EditAttendanceScreen(
+                              attendanceRecord: atd,
+                            ),
+                          ),
+                        );
+                        _refreshData();
+                      },
+                      onDelete: (atd) async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Confirm Deletion'),
+                            content: const Text(
+                                'Are you sure you want to delete this attendance record?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: const Text('Cancel'),
                               ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: const Text(
+                                  'Delete',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirm == true) {
+                          await supabase
+                              .from('attendance')
+                              .delete()
+                              .eq('id', atd['id']);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text(
+                                  'Attendance record deleted successfully.'),
+                              backgroundColor: Colors.green.shade700,
                             ),
                           );
                           _refreshData();
-                        },
-                        onDelete: (atd) async {
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text('Confirm Deletion'),
+                        }
+                      },
+                    );
+                  },
+                ),
+                const SizedBox(height: 24),
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _absenceFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
+                    if (!snapshot.hasData) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: CircularProgressIndicator(color: firstColor),
+                        ),
+                      );
+                    }
+
+                    List<Map<String, dynamic>> absence = snapshot.data!;
+                    if (searchQuery.isNotEmpty) {
+                      final id = int.tryParse(searchQuery);
+                      if (id != null) {
+                        absence = absence
+                            .where((e) => e['employee_id'] == id)
+                            .toList();
+                      } else {
+                        absence = [];
+                      }
+                    }
+
+                    return AbsenceDataTableWidget(
+                      absence: absence,
+                      onEdit: (abs) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => EditAbsenceScreen(
+                              absenceRecord: abs,
+                            ),
+                          ),
+                        );
+                        _refreshData();
+                      },
+                      onDelete: (abs) async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Confirm Deletion'),
+                            content: const Text(
+                                'Are you sure you want to delete this absence record?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: const Text(
+                                  'Delete',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirm == true) {
+                          await supabase
+                              .from('attendance')
+                              .delete()
+                              .eq('id', abs['id']);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
                               content: const Text(
-                                  'Are you sure you want to delete this attendance record?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, false),
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, true),
-                                  child: const Text('Delete',
-                                      style: TextStyle(color: Colors.red)),
-                                ),
-                              ],
+                                  'Absence record deleted successfully.'),
+                              backgroundColor: Colors.green.shade700,
                             ),
                           );
-
-                          if (confirm == true) {
-                            await supabase
-                                .from('attendance')
-                                .delete()
-                                .eq('id', atd['id']);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: const Text(
-                                    'Attendance record deleted successfully.'),
-                                backgroundColor: Colors.green.shade700,
-                              ),
-                            );
-                            _refreshData();
-                          }
-                        },
-                      ),
-                    ],
-                  );
-                },
-              ),
+                          _refreshData();
+                        }
+                      },
+                    );
+                  },
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 }
-
 
 // DataTableSource implementation for paginated data table
 class AttendanceDataTable extends DataTableSource {

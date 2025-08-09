@@ -1,3 +1,4 @@
+import 'package:albaderapp/screens/admin/absence_screen.dart';
 import 'package:albaderapp/screens/admin/attendance_records_screen.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/widgets/attendance_form.dart';
@@ -17,11 +18,14 @@ class _AttendanceState extends State<AttendanceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: Padding(
-          padding: EdgeInsets.all(screenPadding(context, 0.03)),
-          child: Column(
+      padding: EdgeInsets.all(screenPadding(context, 0.03)),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               CustomButton(
-                widthFactor: 0.8,
+                widthFactor: 0.4,
                 heightFactor: 0.1,
                 label: 'View Records',
                 onPressed: () {
@@ -32,12 +36,26 @@ class _AttendanceState extends State<AttendanceScreen> {
                   );
                 },
               ),
-              SizedBox(height: screenHeight(context, 0.02)),
-              const Expanded(
-                child: AttendanceForm(),
+              CustomButton(
+                widthFactor: 0.4,
+                heightFactor: 0.1,
+                label: 'Add Absence',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const AbsenceScreen()),
+                  );
+                },
               ),
             ],
           ),
-        ));
+          SizedBox(height: screenHeight(context, 0.02)),
+          const Expanded(
+            child: AttendanceForm(),
+          ),
+        ],
+      ),
+    ));
   }
 }

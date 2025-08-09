@@ -18,6 +18,7 @@ class SearchAndDisplayCard<T> extends StatelessWidget {
   final double horizontalPadding;
   final double buttonHeight;
   final bool readOnly;
+  final bool enabled;
 
   const SearchAndDisplayCard({
     super.key,
@@ -32,6 +33,7 @@ class SearchAndDisplayCard<T> extends StatelessWidget {
     required this.horizontalPadding,
     required this.buttonHeight,
     this.readOnly = false,
+    this.enabled = true,
   });
 
   @override
@@ -47,6 +49,7 @@ class SearchAndDisplayCard<T> extends StatelessWidget {
           horizontalPadding: horizontalPadding,
           buttonHeight: buttonHeight,
           readOnly: readOnly,
+          enabled: enabled,
         ),
         const SizedBox(height: 10),
         if (data != null) ...[
