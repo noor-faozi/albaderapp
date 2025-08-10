@@ -2,7 +2,6 @@ import 'package:albaderapp/screens/admin/add_employee_screen.dart';
 import 'package:albaderapp/screens/admin/edit_employee_screen.dart';
 import 'package:albaderapp/theme/colors.dart';
 import 'package:albaderapp/utils/responsive.dart';
-import 'package:albaderapp/widgets/custom_app_bar.dart';
 import 'package:albaderapp/widgets/styled_date_table.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
