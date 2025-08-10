@@ -14,10 +14,18 @@ class _SalaryReportScreenState extends State<SalaryReportScreen> {
   String employeeName = '';
   String profession = '';
   DateTime selectedMonth = DateTime.now();
+
   double totalAttendanceHours = 0;
   double totalAttendanceAmount = 0;
   double totalOvertimeHours = 0;
   double totalOvertimePay = 0;
+
+  int totalAbsenceDays = 0;
+  int totalNonExcusedAbsenceDays = 0;
+  int totalSickLeaveDays = 0;
+  double totalSickLeavePay = 0;
+
+
   bool isLoading = true;
   bool isFutureMonth = false;
 
@@ -69,6 +77,7 @@ class _SalaryReportScreenState extends State<SalaryReportScreen> {
     final fromDate = DateFormat('yyyy-MM-dd').format(monthStart);
     final toDate = DateFormat('yyyy-MM-dd').format(monthEnd);
 
+    // Attendance
     final attendanceRes = await supabase
         .from('attendance')
         .select('total_hours, amount')
@@ -84,6 +93,7 @@ class _SalaryReportScreenState extends State<SalaryReportScreen> {
       attendanceAmount += (row['amount'] ?? 0).toDouble();
     }
 
+    // Overtime
     final overtimeRes = await supabase
         .from('overtime')
         .select('total_hours, cost, amount')
@@ -104,11 +114,47 @@ class _SalaryReportScreenState extends State<SalaryReportScreen> {
       overtimeAmount += amount;
     }
 
+    // Absence and Sick Leave from your absence_view
+    final absenceViewRes = await supabase
+        .from('absence_view')
+        .select('is_absent, is_sickleave, total_hours, amount')
+        .eq('employee_id', employeeId!)
+        .gte('date', fromDate)
+        .lte('date', toDate);
+
+    int absenceDays = 0;
+    int sickLeaveDays = 0;
+    double sickLeavePay = 0;
+
+    for (final row in absenceViewRes) {
+      final isAbsent = row['is_absent'] as bool? ?? false;
+      final isSickLeave = row['is_sickleave'] as bool? ?? false;
+      final amount = (row['amount'] ?? 0).toDouble();
+
+      if (isAbsent) {
+        absenceDays += 1;
+        if (!isSickLeave) {
+          totalNonExcusedAbsenceDays += 1;
+        }
+      }
+      if (isSickLeave) {
+        sickLeaveDays += 1;
+        sickLeavePay += amount;
+      }
+    }
+
+    if (!mounted) return;
+
     setState(() {
       totalAttendanceHours = attendanceHours;
       totalAttendanceAmount = attendanceAmount;
       totalOvertimeHours = overtimeHours;
       totalOvertimePay = overtimeAmount;
+
+      totalAbsenceDays = absenceDays;
+      totalSickLeaveDays = sickLeaveDays;
+      totalSickLeavePay = sickLeavePay;
+
       isLoading = false;
     });
   }
@@ -137,6 +183,10 @@ class _SalaryReportScreenState extends State<SalaryReportScreen> {
     final monthStr = DateFormat('MMMM yyyy').format(selectedMonth);
     final rangeStr =
         '1 ${DateFormat('MMMM').format(selectedMonth)} - ${DateUtils.getDaysInMonth(selectedMonth.year, selectedMonth.month)} ${DateFormat('MMMM').format(selectedMonth)}';
+
+    // Total Pay calculation includes sick leave pay
+    final double totalPay =
+        totalAttendanceAmount + totalOvertimePay + totalSickLeavePay;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -191,7 +241,7 @@ class _SalaryReportScreenState extends State<SalaryReportScreen> {
                                   const SizedBox(height: 24),
                                   _buildMonthHeader(monthStr, rangeStr),
                                   const SizedBox(height: 24),
-                                  _buildSalaryCard(),
+                                  _buildSalaryCard(totalPay),
                                 ],
                               ),
                             ),
@@ -262,7 +312,7 @@ class _SalaryReportScreenState extends State<SalaryReportScreen> {
     );
   }
 
-  Widget _buildSalaryCard() {
+  Widget _buildSalaryCard(double totalPay) {
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -288,10 +338,26 @@ class _SalaryReportScreenState extends State<SalaryReportScreen> {
               value: 'RM ${totalOvertimePay.toStringAsFixed(2)}',
             ),
             const Divider(height: 28),
+           ReportRow(
+              label: 'Non-excused Absence Days',
+              value: '$totalNonExcusedAbsenceDays days',
+            ),
+            ReportRow(
+              label: 'Sick Leave Days',
+              value: '$totalSickLeaveDays days',
+            ),
+            ReportRow(
+              label: 'Sick Leave Pay',
+              value: 'RM ${totalSickLeavePay.toStringAsFixed(2)}',
+            ),
+            ReportRow(
+              label: 'Total Absence Days',
+              value: '$totalAbsenceDays days',
+            ),
+            const Divider(height: 28),
             ReportRow(
               label: 'Total Pay',
-              value:
-                  'RM ${(totalAttendanceAmount + totalOvertimePay).toStringAsFixed(2)}',
+              value: 'RM ${totalPay.toStringAsFixed(2)}',
               bold: true,
             ),
           ],
