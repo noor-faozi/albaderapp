@@ -6,6 +6,7 @@ class CommonDrawer extends StatelessWidget {
   final String userName;
   final String userRole;
   final String userEmail;
+  final String? userDepartment;
   final VoidCallback onLogout;
   final VoidCallback? onConfigurations;
 
@@ -14,6 +15,7 @@ class CommonDrawer extends StatelessWidget {
     required this.userName,
     required this.userRole,
     required this.userEmail,
+    this.userDepartment,
     required this.onLogout,
     this.onConfigurations,
   });
@@ -61,6 +63,17 @@ class CommonDrawer extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
+                if (userDepartment != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    '${userDepartment!} Department',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 4),
                 Text(
                   userRole,
@@ -92,15 +105,16 @@ class CommonDrawer extends StatelessWidget {
                 'Configurations',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
-              onTap: onConfigurations ?? () {
-                Navigator.pop(context); // close the drawer first
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ConfigurationsScreen(),
-                  ),
-                );
-              },
+              onTap: onConfigurations ??
+                  () {
+                    Navigator.pop(context); // close the drawer first
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ConfigurationsScreen(),
+                      ),
+                    );
+                  },
             ),
 
           const Spacer(),

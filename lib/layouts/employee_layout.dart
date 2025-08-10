@@ -18,6 +18,7 @@ class _EmployeeLayoutState extends State<EmployeeLayout> {
   String userName = 'Loading...';
   String userRole = 'Loading...';
   String userEmail = 'Loading...';
+  String userDepartment = 'Loading...';
 
   @override
   void initState() {
@@ -25,7 +26,7 @@ class _EmployeeLayoutState extends State<EmployeeLayout> {
     fetchUserProfile();
   }
 
-  Future<void> fetchUserProfile() async {
+ Future<void> fetchUserProfile() async {
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
 
@@ -34,21 +35,24 @@ class _EmployeeLayoutState extends State<EmployeeLayout> {
         userName = 'Guest';
         userRole = 'No Role';
         userEmail = '';
+        userDepartment = 'No Department';
       });
       return;
     }
 
     try {
       final data = await supabase
-          .from('profiles')
-          .select('full_name, role')
-          .eq('id', user.id)
+          .from('employees')
+          .select(
+              'name, profession, departments(name)') // join with departments table
+          .eq('user_id', user.id)
           .maybeSingle();
 
       setState(() {
-        userName = data?['full_name'] ?? user.email ?? 'No Name';
-        userRole = data?['role'] ?? 'No Role';
+        userName = data?['name'] ?? user.email ?? 'No Name';
+        userRole = data?['profession'] ?? 'No Role';
         userEmail = user.email ?? '';
+        userDepartment = data?['departments']?['name'] ?? 'No Department';
       });
     } catch (error) {
       if (mounted) {
@@ -56,6 +60,7 @@ class _EmployeeLayoutState extends State<EmployeeLayout> {
           userName = user.email ?? 'No Name';
           userRole = 'Unknown Role';
           userEmail = user.email ?? '';
+          userDepartment = 'No Department';
         });
       }
     }
@@ -69,6 +74,7 @@ class _EmployeeLayoutState extends State<EmployeeLayout> {
         userName: userName,
         userRole: userRole,
         userEmail: userEmail,
+        userDepartment: userDepartment,
         onLogout: () async {
           final confirm = await showDialog<bool>(
             context: context,
