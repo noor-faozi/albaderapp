@@ -1,3 +1,4 @@
+import 'package:albaderapp/screens/admin/configurations_screen.dart';
 import 'package:albaderapp/theme/colors.dart';
 import 'package:flutter/material.dart';
 
@@ -6,21 +7,23 @@ class CommonDrawer extends StatelessWidget {
   final String userRole;
   final String userEmail;
   final VoidCallback onLogout;
+  final VoidCallback? onConfigurations;
 
   const CommonDrawer({
-    Key? key,
+    super.key,
     required this.userName,
     required this.userRole,
     required this.userEmail,
     required this.onLogout,
-  }) : super(key: key);
+    this.onConfigurations,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Drawer(
       child: Column(
         children: [
-          // Header with user info and a background gradient
+          // Header
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
@@ -37,7 +40,6 @@ class CommonDrawer extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Circle avatar with initials
                 CircleAvatar(
                   radius: 40,
                   backgroundColor: Colors.white,
@@ -82,8 +84,28 @@ class CommonDrawer extends StatelessWidget {
 
           const SizedBox(height: 20),
 
+          // Configurations option (only for Admin)
+          if (userRole.toLowerCase() == 'admin')
+            ListTile(
+              leading: const Icon(Icons.settings, color: firstColor),
+              title: const Text(
+                'Configurations',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              onTap: onConfigurations ?? () {
+                Navigator.pop(context); // close the drawer first
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ConfigurationsScreen(),
+                  ),
+                );
+              },
+            ),
+
           const Spacer(),
 
+          // Logout button
           Padding(
             padding: const EdgeInsets.all(20),
             child: ElevatedButton(

@@ -2,7 +2,6 @@ import 'package:albaderapp/screens/admin/absence_screen.dart';
 import 'package:albaderapp/screens/admin/attendance_records_screen.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/widgets/attendance_form.dart';
-import 'package:albaderapp/widgets/custom_app_bar.dart';
 import 'package:albaderapp/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 
