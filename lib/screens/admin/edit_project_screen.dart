@@ -1,7 +1,6 @@
 import 'package:albaderapp/widgets/custom_secondary_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:albaderapp/widgets/project_form.dart'; // Your reusable form widget
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditProjectScreen extends StatefulWidget {
   final Map<String, dynamic> projectRecord;
@@ -13,7 +12,6 @@ class EditProjectScreen extends StatefulWidget {
 }
 
 class _EditProjectScreenState extends State<EditProjectScreen> {
-  final supabase = Supabase.instance.client;
 
   @override
   Widget build(BuildContext context) {

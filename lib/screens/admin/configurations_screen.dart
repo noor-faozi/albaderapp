@@ -1,4 +1,6 @@
+import 'package:albaderapp/screens/admin/departments_screen.dart';
 import 'package:albaderapp/screens/admin/projects_screen.dart';
+import 'package:albaderapp/screens/admin/work_orders_screen.dart';
 import 'package:albaderapp/widgets/custom_secondary_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:albaderapp/utils/responsive.dart';
@@ -45,7 +47,10 @@ class _ConfigurationsScreenState extends State<ConfigurationsScreen> {
             iconSize: iconSize,
             padding: padding,
             onTap: () {
-              // TODO: Navigate to Work Orders screen later
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const WorkOrdersScreen()),
+              );
             },
           ),
           _buildConfigTile(
@@ -57,7 +62,11 @@ class _ConfigurationsScreenState extends State<ConfigurationsScreen> {
             iconSize: iconSize,
             padding: padding,
             onTap: () {
-              // TODO: Navigate to Department screen later
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const DepartmentsScreen()),
+              );
             },
           ),
           _buildConfigTile(
