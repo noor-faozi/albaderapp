@@ -522,17 +522,29 @@ List<Map<String, dynamic>> _departments = [];
   Future<void> _checkEmployeeIdUnique(String employeeId) async {
     if (!RegExp(r'^\d{3}$').hasMatch(employeeId)) return;
 
-    final existing = await Supabase.instance.client
-        .from('employees')
-        .select()
-        .eq('id', employeeId)
-        .maybeSingle();
+    final supabase = Supabase.instance.client;
+    final tablesToCheck = ['supervisors', 'managers', 'employees'];
+
+    bool exists = false;
+    for (final table in tablesToCheck) {
+      final existing = await supabase
+          .from(table)
+          .select('id')
+          .eq('id', employeeId)
+          .maybeSingle();
+
+      if (existing != null) {
+        exists = true;
+        break;
+      }
+    }
 
     setState(() {
-      _employeeIdUniqueError =
-          existing != null ? 'Employee ID already exists' : null;
+      _employeeIdUniqueError = exists ? 'Employee ID already exists' : null;
     });
   }
+
+
 
   String _capitalizeEachWord(String text) {
     return text

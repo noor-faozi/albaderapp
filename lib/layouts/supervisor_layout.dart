@@ -21,6 +21,8 @@ class _SupervisorLayoutState extends State<SupervisorLayout> {
   String userName = 'Loading...';
   String userRole = 'Loading...';
   String userEmail = 'Loading...';
+  String userId = 'Loading...';
+  String userDepartment = 'Loading...';
 
   final List<Widget> _screens = [
     const AttendanceScreen(),
@@ -41,29 +43,41 @@ class _SupervisorLayoutState extends State<SupervisorLayout> {
       setState(() {
         userName = 'Guest';
         userRole = 'No Role';
+        userId = '';
         userEmail = '';
+        userDepartment = 'No Department';
       });
       return;
     }
 
     try {
       final data = await supabase
+          .from('supervisors')
+          .select('id, name, departments(name)')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+      final profile = await supabase
           .from('profiles')
           .select('full_name, role')
           .eq('id', user.id)
           .maybeSingle();
 
       setState(() {
-        userName = data?['full_name'] ?? user.email ?? 'No Name';
-        userRole = data?['role'] ?? 'No Role';
+        userName = data?['name'] ?? 'No Name';
+        userId = data?['id'] ?? '';
+        userRole = profile?['role'] ?? 'No Role';
         userEmail = user.email ?? '';
+        userDepartment = data?['departments']?['name'] ?? 'No Department';
       });
     } catch (error) {
       if (mounted) {
         setState(() {
           userName = user.email ?? 'No Name';
+          userId = '';
           userRole = 'Unknown Role';
           userEmail = user.email ?? '';
+          userDepartment = 'No Department';
         });
       }
     }
@@ -86,8 +100,10 @@ class _SupervisorLayoutState extends State<SupervisorLayout> {
       appBar: CustomAppBar(title: getTitle(_selectedIndex)),
       drawer: CommonDrawer(
         userName: userName,
+        userId: userId,
         userRole: userRole,
         userEmail: userEmail,
+        userDepartment: userDepartment,
         onLogout: () async {
           final confirm = await showDialog<bool>(
             context: context,
