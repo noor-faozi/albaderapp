@@ -59,6 +59,7 @@ class _AbsenceDataTableWidgetState extends State<AbsenceDataTableWidget> {
       const DataColumn(label: Text('Name')),
       const DataColumn(label: Text('Profession')),
       const DataColumn(label: Text('Date')),
+      const DataColumn(label: Text('W/O ID')),
       const DataColumn(label: Text('Total Hours')),
       const DataColumn(label: Text('Sick Leave')),
     ];
@@ -80,7 +81,7 @@ class _AbsenceDataTableWidgetState extends State<AbsenceDataTableWidget> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: StyledDataTable(
           child: PaginatedDataTable(
-            header: const Text('absence Records'),
+            header: const Text('Absence Records'),
             rowsPerPage: 7,
             columns: columns,
             source: _data,
@@ -120,6 +121,7 @@ class AttendanceDataTable extends DataTableSource {
       DataCell(Text(abs['employee_name'] ?? '')),
       DataCell(Text(abs['profession'] ?? '')),
       DataCell(Text(abs['date']?.toString().split('T').first ?? '')),
+      DataCell(Text(abs['work_order_id'] ?? '')),
       DataCell(Text(abs['total_hours'] != null
           ? TimeUtils.formatHoursToHM(abs['total_hours'])
           : '')),

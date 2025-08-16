@@ -179,13 +179,14 @@ class _AttendanceFormState extends State<AttendanceForm> {
         DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
 
     if (selectedDateOnly.isAfter(today)) {
-      setState(() {
-        _dateError = 'Date cannot be in the future.';
-        _isLoading = false;
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Date cannot be in the future.'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      setState(() => _isLoading = false);
       return;
-    } else {
-      _dateError = null;
     }
 
     if (_totalHours == null || _totalHours! <= 0) {

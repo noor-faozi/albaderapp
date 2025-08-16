@@ -25,12 +25,15 @@ class AbsenceForm extends StatefulWidget {
 class _AbsenceFormState extends State<AbsenceForm> {
   final _formKey = GlobalKey<FormState>();
   final _employeeIdController = TextEditingController();
+  final _workOrderIdController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   AbsenceType _absenceType = AbsenceType.absent;
   bool _isLoading = false;
 
   bool _isSubmitting = false;
   Map<String, dynamic>? _employee;
+  Map<String, dynamic>? _workOrder;
+  bool _workOrderNotFound = false;
   bool _employeeNotFound = false;
   final supabase = Supabase.instance.client;
   String? _dateError;
@@ -41,11 +44,13 @@ class _AbsenceFormState extends State<AbsenceForm> {
     if (widget.absenceRecord != null) {
       final record = widget.absenceRecord!;
       _employeeIdController.text = record['employee_id'].toString();
+      _workOrderIdController.text = record['work_order_id']?.toString() ?? '';
       _selectedDate = DateTime.parse(record['date']);
       _absenceType = record['is_sickleave'] == true
           ? AbsenceType.sickLeave
           : AbsenceType.absent;
       _fetchEmployee();
+      _fetchWorkOrder();
     }
   }
 
@@ -56,7 +61,18 @@ class _AbsenceFormState extends State<AbsenceForm> {
       return 0.0; // No hours if absent
     }
   }
-Future<void> _submitAbsence() async {
+
+  Future<void> _fetchWorkOrder() async {
+    final id = _workOrderIdController.text.trim();
+    final result =
+        await supabase.from('work_orders').select().eq('id', id).maybeSingle();
+    setState(() {
+      _workOrder = result;
+      _workOrderNotFound = result == null;
+    });
+  }
+
+  Future<void> _submitAbsence() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
@@ -87,7 +103,7 @@ Future<void> _submitAbsence() async {
     if (isHoliday != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Date is a holiday. Submit overtime instead.'),
+          content: const Text('Date is a holiday, no attendance required.'),
           backgroundColor: Colors.red.shade700,
         ),
       );
@@ -115,9 +131,11 @@ Future<void> _submitAbsence() async {
       query = query.not('id', 'eq', excludeId);
     }
 
-    final existingConflict = await query.maybeSingle();
+    final existingConflict = await query.limit(1);
 
-    if (existingConflict != null) {
+    debugPrint('Conflict check result: $existingConflict');
+
+    if (existingConflict.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
@@ -137,7 +155,7 @@ Future<void> _submitAbsence() async {
       'total_hours': _totalHours,
       'is_absent': true,
       'is_sickleave': _absenceType == AbsenceType.sickLeave,
-      'work_order_id': null,
+      'work_order_id': _workOrder?['id'],
       'created_by': userId,
     };
 
@@ -178,6 +196,7 @@ Future<void> _submitAbsence() async {
       if (mounted) setState(() => _isSubmitting = false);
     }
   }
+
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -223,15 +242,14 @@ Future<void> _submitAbsence() async {
                           fontWeight: FontWeight.w500,
                           letterSpacing: 0.7)),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: screenHeight(context, 0.03)),
                 DatePickerFormField(
                   selectedDate: _selectedDate,
                   onChanged: widget.absenceRecord == null
                       ? (newDate) => setState(() => _selectedDate = newDate)
                       : (newDate) {}, // empty function instead of null
                 ),
-                const SizedBox(height: 16),
-                const SizedBox(height: 16),
+                SizedBox(height: screenHeight(context, 0.025)),
                 SearchAndDisplayCard<Map<String, dynamic>>(
                   controller: _employeeIdController,
                   label: 'Employee Code',
@@ -252,7 +270,36 @@ Future<void> _submitAbsence() async {
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: screenHeight(context, 0.025)),
+                // Work Order:
+                SearchAndDisplayCard<Map<String, dynamic>>(
+                  controller: _workOrderIdController,
+                  label: 'Work Order Code',
+                  exactDigits: 10,
+                  onSearch: _fetchWorkOrder,
+                  data: _workOrder,
+                  notFound: _workOrderNotFound,
+                  verticalPadding: verticalPadding,
+                  horizontalPadding: screenPadding(context, 0.04),
+                  buttonHeight: buttonHeight,
+                  detailsBuilder: (workOrder) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Work Order Details",
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text("Work Order Code: ${workOrder['id']}"),
+                      Text("Description: ${workOrder['description']}"),
+                    ],
+                  ),
+                ),
+                SizedBox(height: screenHeight(context, 0.025)),
+
                 DropdownButtonFormField<AbsenceType>(
                   value: _absenceType,
                   onChanged: (val) {
@@ -286,7 +333,7 @@ Future<void> _submitAbsence() async {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: screenHeight(context, 0.025)),
                 Row(
                   children: [
                     const Text('Total Hours:'),
@@ -310,7 +357,7 @@ Future<void> _submitAbsence() async {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: screenHeight(context, 0.04)),
                 CustomButton(
                   label: _isLoading
                       ? 'Saving...'
