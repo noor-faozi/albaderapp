@@ -18,6 +18,8 @@ class _ManagerLayoutState extends State<ManagerLayout> {
   String userName = 'Loading...';
   String userRole = 'Loading...';
   String userEmail = 'Loading...';
+  String userId = 'Loading...';
+  String userDepartment = 'Loading...';
 
   @override
   void initState() {
@@ -34,28 +36,40 @@ class _ManagerLayoutState extends State<ManagerLayout> {
         userName = 'Guest';
         userRole = 'No Role';
         userEmail = '';
+        userId = '';
+        userDepartment = 'No Department';
       });
       return;
     }
 
     try {
       final data = await supabase
+          .from('managers')
+          .select('id, name, departments(name)') // join with departments table
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+      final profile = await supabase
           .from('profiles')
           .select('full_name, role')
           .eq('id', user.id)
           .maybeSingle();
 
       setState(() {
-        userName = data?['full_name'] ?? user.email ?? 'No Name';
-        userRole = data?['role'] ?? 'No Role';
+        userName = data?['name'] ?? user.email ?? 'No Name';
+        userId = data?['id'] ?? '';
+        userRole = profile?['role'] ?? 'No Role';
         userEmail = user.email ?? '';
+        userDepartment = data?['departments']?['name'] ?? 'No Department';
       });
     } catch (error) {
       if (mounted) {
         setState(() {
           userName = user.email ?? 'No Name';
+          userId = '';
           userRole = 'Unknown Role';
           userEmail = user.email ?? '';
+          userDepartment = 'No Department';
         });
       }
     }
@@ -66,9 +80,11 @@ class _ManagerLayoutState extends State<ManagerLayout> {
     return Scaffold(
       appBar: CustomAppBar(title: 'Manager Dashboard'),
       drawer: CommonDrawer(
+        userId: userId,
         userName: userName,
         userRole: userRole,
         userEmail: userEmail,
+        userDepartment: userDepartment,
         onLogout: () async {
           final confirm = await showDialog<bool>(
             context: context,

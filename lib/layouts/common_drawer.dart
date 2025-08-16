@@ -6,6 +6,7 @@ class CommonDrawer extends StatelessWidget {
   final String userName;
   final String userRole;
   final String userEmail;
+  final String? userId;
   final String? userDepartment;
   final VoidCallback onLogout;
   final VoidCallback? onConfigurations;
@@ -15,6 +16,7 @@ class CommonDrawer extends StatelessWidget {
     required this.userName,
     required this.userRole,
     required this.userEmail,
+    this.userId,
     this.userDepartment,
     required this.onLogout,
     this.onConfigurations,
@@ -56,11 +58,20 @@ class CommonDrawer extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  userName,
+                  '${userName}${userId != null ? ' ($userId)' : ''}',
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  userRole,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.white70,
                   ),
                 ),
                 if (userDepartment != null) ...[
@@ -74,15 +85,6 @@ class CommonDrawer extends StatelessWidget {
                     ),
                   ),
                 ],
-                const SizedBox(height: 4),
-                Text(
-                  userRole,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontStyle: FontStyle.italic,
-                    color: Colors.white70,
-                  ),
-                ),
                 const SizedBox(height: 4),
                 Text(
                   userEmail,
