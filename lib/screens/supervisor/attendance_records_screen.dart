@@ -30,7 +30,9 @@ class _AttendanceRecordsScreenState extends State<AttendanceRecordsScreen> {
 
   Future<List<Map<String, dynamic>>> fetchattendanceData() async {
     final result =
-        await supabase.from('attendance_with_employee').select().order('date');
+        await supabase.from('attendance_with_employee').select()
+        .neq('is_absent', true)
+        .order('date');
     return List<Map<String, dynamic>>.from(result);
   }
 

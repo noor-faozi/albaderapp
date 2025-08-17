@@ -82,6 +82,7 @@ class _SalaryReportScreenState extends State<SalaryReportScreen> {
         .from('attendance')
         .select('total_hours, amount')
         .eq('employee_id', employeeId!)
+        .neq('is_absent', true)
         .gte('date', fromDate)
         .lte('date', toDate);
 

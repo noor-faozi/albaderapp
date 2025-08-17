@@ -65,6 +65,7 @@ class _WorkOrderFormState extends State<WorkOrderForm> {
       final newId = _idController.text.trim();
 
       if (widget.workOrderRecord == null) {
+        // --- CREATE MODE ---
         // Check if work order ID already exists
         final existing = await supabase
             .from('work_orders')
@@ -91,11 +92,36 @@ class _WorkOrderFormState extends State<WorkOrderForm> {
           'project_id': _selectedProjectId,
         });
       } else {
-        // Update work order
+        // --- UPDATE MODE ---
+        final oldId = widget.workOrderRecord?['id'];
+
+        if (newId != oldId) {
+          // Check if newId is already taken by a different record
+          final existing = await supabase
+              .from('work_orders')
+              .select('id')
+              .eq('id', newId)
+              .maybeSingle();
+
+          if (existing != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Work Order ID "$newId" already exists. Please use a different ID.'),
+                backgroundColor: Colors.red.shade700,
+              ),
+            );
+            setState(() => _isLoading = false);
+            return;
+          }
+        }
+
+        // Update work order (including id if changed)
         await supabase.from('work_orders').update({
+          'id': newId,
           'description': _descriptionController.text.trim(),
           'project_id': _selectedProjectId,
-        }).eq('id', newId);
+        }).eq('id', oldId);
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -177,7 +203,6 @@ class _WorkOrderFormState extends State<WorkOrderForm> {
             // Work Order ID
             CustomTextFormField(
               controller: _idController,
-              isReadOnly: widget.workOrderRecord != null,
               labelText: "Work Order ID",
               prefixIcon: const Icon(Icons.confirmation_number),
               validator: (value) {
