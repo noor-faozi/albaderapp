@@ -31,8 +31,9 @@ class _OvertimeScreenState extends State<OvertimeScreen> {
   }
 
   Future<void> _refreshData() async {
+    final data = await fetchOvertimeData();
     setState(() {
-      _overtimeFuture = fetchOvertimeData();
+      _overtimeFuture = Future.value(data);
     });
   }
 
@@ -52,8 +53,9 @@ class _OvertimeScreenState extends State<OvertimeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const OvertimeApprovalScreen()),
-                  );
+                      builder: (context) => const OvertimeApprovalScreen(),
+                    ),
+                  ).then((_) => _refreshData()); 
                 },
               ),
             ),
@@ -80,14 +82,33 @@ class _OvertimeScreenState extends State<OvertimeScreen> {
                 child: FutureBuilder<List<Map<String, dynamic>>>(
                   future: _overtimeFuture,
                   builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    }
-                    if (!snapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator());
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: const [
+                          SizedBox(
+                            height: 400,
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                        ],
+                      );
                     }
 
-                    List<Map<String, dynamic>> overtime = snapshot.data!;
+                    if (snapshot.hasError) {
+                      return ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: 400,
+                            child: Center(
+                              child: Text('Error: ${snapshot.error}'),
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+
+                    List<Map<String, dynamic>> overtime = snapshot.data ?? [];
 
                     if (searchQuery.isNotEmpty) {
                       final id = int.tryParse(searchQuery);
@@ -100,12 +121,31 @@ class _OvertimeScreenState extends State<OvertimeScreen> {
                       }
                     }
 
-                    return OvertimeDataTableWidget(
-                      overtime: overtime,
-                      showEdit: false,
-                      showDelete: false,
-                      showAmount: false,
-                      showApproval: true,
+                    if (overtime.isEmpty) {
+                      return ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: const [
+                          SizedBox(
+                            height: 400,
+                            child: Center(child: Text('No overtime records')),
+                          ),
+                        ],
+                      );
+                    }
+
+                    return CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: OvertimeDataTableWidget(
+                            overtime: overtime,
+                            showEdit: false,
+                            showDelete: false,
+                            showAmount: false,
+                            showApproval: true,
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),

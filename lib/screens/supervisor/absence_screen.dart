@@ -17,8 +17,12 @@ class _AbsenceScreenState extends State<AbsenceScreen> {
       appBar: const CustomSecondaryAppBar(title: "Absence"),
       body: Padding(
         padding: EdgeInsets.all(screenPadding(context, 0.03)),
-        child: const Expanded(
-          child: AbsenceForm(),
+        child: const Column(
+          children: [
+            Expanded(
+              child: AbsenceForm(),
+            ),
+          ],
         ),
       ),
     );
