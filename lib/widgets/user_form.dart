@@ -80,17 +80,32 @@ class _UserFormState extends State<UserForm> {
   }
 
   String? _validateEmployeeId(String? value) {
-    if (value == null || !RegExp(r'^\d{3}$').hasMatch(value)) {
-      return 'Employee ID must be exactly 3 digits';
+    if (value == null || value.isEmpty) {
+      return 'Employee ID is required';
     }
+
+    final idNumber = int.tryParse(value);
+    if (idNumber == null || idNumber < 1 || idNumber > 9999) {
+      return 'Employee ID must be between 1 and 9999';
+    }
+
     if (_employeeIdUniqueError != null) {
       return _employeeIdUniqueError;
     }
+
     return null;
   }
 
   Future<void> _checkEmployeeIdUnique(String employeeId) async {
-    if (!RegExp(r'^\d{3}$').hasMatch(employeeId)) return;
+    // Convert to integer
+    final idNumber = int.tryParse(employeeId);
+    if (idNumber == null || idNumber < 1 || idNumber > 9999) {
+      // Not a valid ID, don't check uniqueness
+      setState(() {
+        _employeeIdUniqueError = 'Employee ID must be between 1 and 9999';
+      });
+      return;
+    }
 
     final supabase = Supabase.instance.client;
     final tablesToCheck = ['supervisors', 'managers', 'employees'];
@@ -110,10 +125,10 @@ class _UserFormState extends State<UserForm> {
     }
 
     setState(() {
-      _employeeIdUniqueError =
-          exists ? 'Employee ID already exists' : null;
+      _employeeIdUniqueError = exists ? 'Employee ID already exists' : null;
     });
   }
+
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
@@ -263,7 +278,7 @@ class _UserFormState extends State<UserForm> {
             CustomTextFormField(
               controller: _employeeIdController,
               keyboardType: TextInputType.number,
-              labelText: "Employee ID (3 digits)",
+              labelText: "Employee ID",
               prefixIcon: const Icon(Icons.badge_outlined),
               isReadOnly: widget.userRecord != null,
               validator: _validateEmployeeId,

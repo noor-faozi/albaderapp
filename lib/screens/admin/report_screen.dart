@@ -1,4 +1,5 @@
 import 'package:albaderapp/screens/admin/project_excel_export.dart';
+import 'package:albaderapp/screens/admin/work_order_excel_export.dart';
 import 'package:albaderapp/utils/responsive.dart';
 import 'package:albaderapp/widgets/search_input.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +30,87 @@ class _ReportScreenState extends State<ReportScreen> {
 
   final supabase = Supabase.instance.client;
 
+  Future<Map<String, dynamic>> fetchWorkOrderDetails(
+    String workOrderID, DateTime fromDate, DateTime toDate) async {
+      final workOrderExists = await supabase
+          .from('work_orders')
+          .select('id')
+          .eq('id', workOrderID)
+          .maybeSingle();
+
+      if (workOrderExists == null) return {};
+
+      // Attendance records
+      var attendanceQuery = supabase
+          .from('attendance')
+          .select('employee_id, total_hours, amount, date')
+          .eq('work_order_id', workOrderID);
+
+      // Overtime records
+      var overtimeQuery = supabase
+          .from('overtime')
+          .select('employee_id, total_hours, amount, date')
+          .eq('work_order_id', workOrderID)
+          .eq('approved', true);
+
+      attendanceQuery = attendanceQuery.gte('date', fromDate.toIso8601String());
+      overtimeQuery = overtimeQuery.gte('date', fromDate.toIso8601String());
+      attendanceQuery = attendanceQuery.lte('date', toDate.toIso8601String());
+      overtimeQuery = overtimeQuery.lte('date', toDate.toIso8601String());
+    
+      final attendanceData = await attendanceQuery;
+      final overtimeData = await overtimeQuery;
+
+      Map<String, Map<String, dynamic>> employeeSummary = {};
+      double totalCost = 0.0;
+      double totalHours = 0.0;
+
+      // Process attendance
+      for (var row in attendanceData) {
+        final empId = row['employee_id'].toString();
+        final hours = (row['total_hours'] ?? 0).toDouble();
+        final amount = (row['amount'] ?? 0).toDouble();
+
+        if (!employeeSummary.containsKey(empId)) {
+          employeeSummary[empId] = {
+            'hours': 0.0,
+            'cost': 0.0,
+          };
+        }
+        employeeSummary[empId]!['hours'] += hours;
+        employeeSummary[empId]!['cost'] += amount;
+
+        totalHours += hours;
+        totalCost += amount;
+      }
+
+      // Process overtime
+      for (var row in overtimeData) {
+        final empId = row['employee_id'].toString();
+        final hours = (row['total_hours'] ?? 0).toDouble();
+        final amount = (row['amount'] ?? 0).toDouble();
+
+        if (!employeeSummary.containsKey(empId)) {
+          employeeSummary[empId] = {
+            'hours': 0.0,
+            'cost': 0.0,
+          };
+        }
+        employeeSummary[empId]!['hours'] += hours;
+        employeeSummary[empId]!['cost'] += amount;
+
+        totalHours += hours;
+        totalCost += amount;
+      }
+
+      return {
+        'workOrderId': workOrderID,
+        'employees': employeeSummary,
+        'totalHours': totalHours,
+        'totalCost': totalCost,
+      };
+    }
+
   Future<void> fetchProjectCosts(String projectID) async {
     final workOrders = await supabase
         .from('work_orders')
@@ -40,9 +122,12 @@ class _ReportScreenState extends State<ReportScreen> {
 
     for (var row in workOrders) {
       final woId = row['id'];
-      final cost = await fetchWorkOrderCost(woId);
-      total += cost!;
-      results.add({'workOrderId': woId, 'cost': cost});
+      final details = await fetchWorkOrderDetails(
+          woId, _fromDate ?? DateTime(2000), _toDate ?? DateTime(2100));
+      if (details.isNotEmpty) {
+        results.add(details);
+        total += details['totalCost'];
+      }
     }
 
     setState(() {
@@ -51,7 +136,7 @@ class _ReportScreenState extends State<ReportScreen> {
     });
   }
 
-Future<double?> fetchWorkOrderCost(String workOrderID) async {
+  Future<double?> fetchWorkOrderCost(String workOrderID) async {
     final workOrderExists = await supabase
         .from('work_orders')
         .select('id')
@@ -162,136 +247,180 @@ Future<double?> fetchWorkOrderCost(String workOrderID) async {
             ),
 
             // WORK ORDER SECTION
-            Card(
-              elevation: 3,
-              margin: const EdgeInsets.only(bottom: 24),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(padding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("Work Order Report",
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 6),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.info_outline,
-                            size: 18, color: Colors.blueGrey),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            "Enter a Work Order ID to view the labour cost linked with it.\n"
-                            "This includes attendance and approved overtime entries.",
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey[700],
-                              fontStyle: FontStyle.italic,
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: padding),
-                    // Replace your date input section with this simpler version:
-                    Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () =>
-                                _selectDate(context, _fromDateController, true),
-                            child: AbsorbPointer(
-                              child: TextFormField(
-                                controller: _fromDateController,
-                                decoration: InputDecoration(
-                                  labelText: 'From Date',
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                  suffixIcon: const Icon(Icons.calendar_today),
-                                ),
-                                readOnly: true,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () =>
-                                _selectDate(context, _toDateController, false),
-                            child: AbsorbPointer(
-                              child: TextFormField(
-                                controller: _toDateController,
-                                decoration: InputDecoration(
-                                  labelText: 'To Date',
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8)),
-                                  suffixIcon: const Icon(Icons.calendar_today),
-                                ),
-                                readOnly: true,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: padding),
-
-                    SearchInput(
-                      controller: _workOrderController,
-                      label: 'Enter Work Order ID',
-                      onSearch: () async {
-                        final cost = await fetchWorkOrderCost(
-                            _workOrderController.text.trim());
-                        setState(() {
-                          if (cost == null) {
-                            // Work order not found
-                            workOrderNotFound = true;
-                            workOrderCost = null;
-                          } else {
-                            workOrderCost = cost;
-                            workOrderNotFound = false;
-                          }
-                        });
-                      },
-                    ),
-                    if (workOrderNotFound)
-                      Padding(
-                        padding: EdgeInsets.only(top: padding),
-                        child: const Text(
-                          'Work Order not found',
-                          style: TextStyle(
-                              color: Colors.red, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    if (workOrderCost == 0 && !workOrderNotFound)
-                      Padding(
-                        padding: EdgeInsets.only(top: padding),
-                        child: const Text(
-                          'No labour cost found in selected date range.',
-                          style: TextStyle(
-                              color: Colors.orange,
-                              fontWeight: FontWeight.w500),
-                        ),
-                      ),
-                    if (workOrderCost != null && workOrderCost != 0)
-                      Padding(
-                        padding: EdgeInsets.only(top: padding),
-                        child: Text(
-                          'Labour Cost: AED ${workOrderCost!.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                      ),
-                  ],
+Card(
+  elevation: 3,
+  margin: const EdgeInsets.only(bottom: 24),
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: Padding(
+    padding: EdgeInsets.all(padding),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Work Order Report",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 6),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.info_outline,
+                size: 18, color: Colors.blueGrey),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                "Enter a Work Order ID to view the labour cost linked with it.\n"
+                "This includes attendance and approved overtime entries.",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[700],
+                  fontStyle: FontStyle.italic,
+                  height: 1.4,
                 ),
               ),
             ),
+          ],
+        ),
+        SizedBox(height: padding),
+        // Date inputs
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () => _selectDate(context, _fromDateController, true),
+                child: AbsorbPointer(
+                  child: TextFormField(
+                    controller: _fromDateController,
+                    decoration: InputDecoration(
+                      labelText: 'From Date',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      suffixIcon: const Icon(Icons.calendar_today),
+                    ),
+                    readOnly: true,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => _selectDate(context, _toDateController, false),
+                child: AbsorbPointer(
+                  child: TextFormField(
+                    controller: _toDateController,
+                    decoration: InputDecoration(
+                      labelText: 'To Date',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      suffixIcon: const Icon(Icons.calendar_today),
+                    ),
+                    readOnly: true,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        SizedBox(height: padding),
+
+        SearchInput(
+          controller: _workOrderController,
+          label: 'Enter Work Order ID',
+          onSearch: () async {
+            final cost = await fetchWorkOrderCost(
+              _workOrderController.text.trim(),
+            );
+            setState(() {
+              if (cost == null) {
+                workOrderNotFound = true;
+                workOrderCost = null;
+              } else {
+                workOrderCost = cost;
+                workOrderNotFound = false;
+              }
+            });
+          },
+        ),
+        if (workOrderNotFound)
+          Padding(
+            padding: EdgeInsets.only(top: padding),
+            child: const Text(
+              'Work Order not found',
+              style: TextStyle(
+                  color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ),
+        if (workOrderCost == 0 && !workOrderNotFound)
+          Padding(
+            padding: EdgeInsets.only(top: padding),
+            child: const Text(
+              'No labour cost found in selected date range.',
+              style: TextStyle(
+                  color: Colors.orange, fontWeight: FontWeight.w500),
+            ),
+          ),
+        if (workOrderCost != null && workOrderCost != 0) ...[
+          Padding(
+            padding: EdgeInsets.only(top: padding),
+            child: Text(
+              'Labour Cost: AED ${workOrderCost!.toStringAsFixed(2)}',
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          ElevatedButton.icon(
+            onPressed: () async {
+              try {
+                final details = await fetchWorkOrderDetails(
+                  _workOrderController.text.trim(),
+                  _fromDate!,
+                  _toDate!,
+                );
+                if (details.isNotEmpty) {
+                  await exportWorkOrderToExcel(
+                    details,
+                    _fromDate!,
+                    _toDate!,
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Work Order Excel exported successfully')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('No data to export for this Work Order')),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Export failed: $e')),
+                );
+              }
+            },
+            icon: const Icon(Icons.download, size: 20),
+            label: const Text(
+              'Export to Excel',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              backgroundColor: Colors.blueAccent,
+              foregroundColor: Colors.white,
+              elevation: 3,
+            ),
+          ),
+        ],
+      ],
+    ),
+  ),
+),
 
             // PROJECT SECTION
             Card(
@@ -417,10 +546,11 @@ Future<double?> fetchWorkOrderCost(String workOrderID) async {
                             contentPadding: EdgeInsets.zero,
                             title: Text('Work Order: ${wo['workOrderId']}'),
                             trailing: Text(
-                              'AED ${wo['cost'].toStringAsFixed(2)}',
+                              'AED ${(wo['totalCost'] ?? 0.0).toStringAsFixed(2)}',
                               style:
                                   const TextStyle(fontWeight: FontWeight.w500),
                             ),
+
                           )),
                       const Divider(),
                       Text(

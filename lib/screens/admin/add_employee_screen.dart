@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'dart:convert';
 import 'package:intl/intl.dart';
 
@@ -159,9 +158,9 @@ List<Map<String, dynamic>> _departments = [];
                   ),
                   CustomTextFormField(
                     controller: _employeeIdController,
-                    labelText: "Employee ID (3 digits)",
+                    labelText: "Employee ID",
                     keyboardType: TextInputType.number,
-                    maxLength: 3,
+                    maxLength: 5,
                     isReadOnly: widget.employeeRecord != null,
                     validator: _validateEmployeeId,
                     onChanged: widget.employeeRecord == null
@@ -509,18 +508,33 @@ List<Map<String, dynamic>> _departments = [];
   }
 
   String? _validateEmployeeId(String? value) {
-    if (value == null || !RegExp(r'^\d{3}$').hasMatch(value)) {
-      return 'Employee ID must be exactly 3 digits';
-    }
+      if (value == null || value.isEmpty) {
+        return 'Employee ID is required';
+      }
 
-    if (_employeeIdUniqueError != null) {
-      return _employeeIdUniqueError;
-    }
-    return null;
+      final idNumber = int.tryParse(value);
+      if (idNumber == null || idNumber < 1 || idNumber > 9999) {
+        return 'Employee ID must be between 1 and 9999';
+      }
+
+      if (_employeeIdUniqueError != null) {
+        return _employeeIdUniqueError;
+      }
+
+      return null;
   }
 
+
   Future<void> _checkEmployeeIdUnique(String employeeId) async {
-    if (!RegExp(r'^\d{3}$').hasMatch(employeeId)) return;
+    // Convert to integer
+    final idNumber = int.tryParse(employeeId);
+    if (idNumber == null || idNumber < 1 || idNumber > 9999) {
+      // Not a valid ID
+      setState(() {
+        _employeeIdUniqueError = 'Employee ID must be between 1 and 9999';
+      });
+      return;
+    }
 
     final supabase = Supabase.instance.client;
     final tablesToCheck = ['supervisors', 'managers', 'employees'];
@@ -540,11 +554,10 @@ List<Map<String, dynamic>> _departments = [];
     }
 
     setState(() {
-      _employeeIdUniqueError = exists ? 'Employee ID already exists' : null;
+      _employeeIdUniqueError =
+          exists ? 'Employee ID already exists' : null;
     });
   }
-
-
 
   String _capitalizeEachWord(String text) {
     return text
